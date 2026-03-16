@@ -77,11 +77,13 @@ export const Bookings: React.FC = () => {
     const slots: TimeSlot[] = []
     const intervalMinutes = 30
 
-    // الحجوزات في هذا اليوم للحلاق المحدد (شامل جميع الحالات)
+    // الحجوزات في هذا اليوم للحلاق المحدد (فقط pending/ongoing)
     const dayBookings = getTodayBookings().filter((b: any) => {
-      const isCorrectDate = new Date(b.bookingtime).toLocaleDateString('en-CA') === date
-      const isCorrectBarber = !selectedBarberId || b.barberid === selectedBarberId
-      return isCorrectDate && isCorrectBarber
+      const isCorrectDate = new Date(b.bookingTime).toLocaleDateString('en-CA') === date
+      const isCorrectBarber = !selectedBarberId || b.barberId === selectedBarberId
+      // استبعد الحجوزات المكتملة والملغاة - لا تحجز الوقت
+      const isActive = b.status !== 'completed' && b.status !== 'cancelled'
+      return isCorrectDate && isCorrectBarber && isActive
     })
 
     for (let hour = workingHours.start; hour < workingHours.end; hour++) {
@@ -89,27 +91,33 @@ export const Bookings: React.FC = () => {
         const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
         const timeMs = hour * 60 + min
 
-        // تحقق من التضاربات (30 دقيقة بافر)
+        // تحقق من التضاربات (30 دقيقة بافر) - فقط pending/ongoing
         const hasConflict = dayBookings.some((booking: any) => {
-          const bookingHour = parseInt(booking.bookingtime.split('T')[1].substring(0, 2))
-          const bookingMin = parseInt(booking.bookingtime.split('T')[1].substring(3, 5))
+          const bookingHour = parseInt(booking.bookingTime.split('T')[1].substring(0, 2))
+          const bookingMin = parseInt(booking.bookingTime.split('T')[1].substring(3, 5))
           const bookingTimeMs = bookingHour * 60 + bookingMin
           return Math.abs(timeMs - bookingTimeMs) < 30
         })
 
         // تحقق من الحجوزات المكتملة في هذا الوقت
-        const completedBooking = dayBookings.find((booking: any) => {
-          const bookingHour = parseInt(booking.bookingtime.split('T')[1].substring(0, 2))
-          const bookingMin = parseInt(booking.bookingtime.split('T')[1].substring(3, 5))
+        const allBookings = getTodayBookings().filter((b: any) => {
+          const isCorrectDate = new Date(b.bookingTime).toLocaleDateString('en-CA') === date
+          const isCorrectBarber = !selectedBarberId || b.barberId === selectedBarberId
+          return isCorrectDate && isCorrectBarber
+        })
+
+        const completedBooking = allBookings.find((booking: any) => {
+          const bookingHour = parseInt(booking.bookingTime.split('T')[1].substring(0, 2))
+          const bookingMin = parseInt(booking.bookingTime.split('T')[1].substring(3, 5))
           const bookingTimeMs = bookingHour * 60 + bookingMin
           const timeMatch = Math.abs(timeMs - bookingTimeMs) < 30
           return timeMatch && booking.status === 'completed'
         })
 
         // تحقق من الحجوزات المعلقة في هذا الوقت
-        const pendingBooking = dayBookings.find((booking: any) => {
-          const bookingHour = parseInt(booking.bookingtime.split('T')[1].substring(0, 2))
-          const bookingMin = parseInt(booking.bookingtime.split('T')[1].substring(3, 5))
+        const pendingBooking = allBookings.find((booking: any) => {
+          const bookingHour = parseInt(booking.bookingTime.split('T')[1].substring(0, 2))
+          const bookingMin = parseInt(booking.bookingTime.split('T')[1].substring(3, 5))
           const bookingTimeMs = bookingHour * 60 + bookingMin
           const timeMatch = Math.abs(timeMs - bookingTimeMs) < 30
           return timeMatch && booking.status !== 'completed' && booking.status !== 'cancelled'
@@ -120,7 +128,7 @@ export const Bookings: React.FC = () => {
           available: !hasConflict,
           reason: hasConflict ? 'محجوز بالفعل' : undefined,
           bookingCount: dayBookings.filter((b: any) => {
-            const bHour = parseInt(b.bookingtime.split('T')[1].substring(0, 2))
+            const bHour = parseInt(b.bookingTime.split('T')[1].substring(0, 2))
             return bHour === hour
           }).length,
           hasCompletedBooking: !!completedBooking,
@@ -144,14 +152,14 @@ export const Bookings: React.FC = () => {
   React.useEffect(() => {
     if (formData.bookingTime) {
       const dayBookings = getTodayBookings().filter(
-        (b: any) => new Date(b.bookingtime).toLocaleDateString('en-CA') === formData.bookingDate
+        (b: any) => new Date(b.bookingTime).toLocaleDateString('en-CA') === formData.bookingDate
       )
       const queueNumber = (dayBookings.filter((b: any) => 
-        parseInt(b.bookingtime.split('T')[1]) < parseInt(formData.bookingTime)
+        parseInt(b.bookingTime.split('T')[1]) < parseInt(formData.bookingTime)
       ).length || 0) + 1
 
       const totalWaitMinutes = dayBookings
-        .filter((b: any) => parseInt(b.bookingtime.split('T')[1]) < parseInt(formData.bookingTime))
+        .filter((b: any) => parseInt(b.bookingTime.split('T')[1]) < parseInt(formData.bookingTime))
         .reduce((sum, b: any) => sum + (b.duration || 30), 0)
 
       setPreviewInfo({

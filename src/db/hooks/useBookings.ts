@@ -74,21 +74,39 @@ export const useBookings = () => {
     bookingTime: string,
     selectedBarberId?: string
   ): Promise<{ queueNumber: number; recommendedBarberId?: string }> => {
-    // Get all bookings for the same day
+    // Get all bookings for the same day (pending/ongoing only)
     const bookingDate = new Date(bookingTime).toLocaleDateString('en-CA')
     const dayBookings = bookings.filter((b) => {
       const bDate = new Date(b.bookingTime).toLocaleDateString('en-CA')
-      return bDate === bookingDate && b.status !== 'cancelled'
+      // استبعد المكتملة والملغاة
+      return bDate === bookingDate && b.status !== 'cancelled' && b.status !== 'completed'
     })
+
+    // Parse the booking time to get hour and minutes
+    const newBookingHour = parseInt(bookingTime.split('T')[1].substring(0, 2))
+    const newBookingMin = parseInt(bookingTime.split('T')[1].substring(3, 5))
 
     // If barber is specified, calculate queue for that barber
     if (selectedBarberId) {
-      const barberQueue = dayBookings
+      // Get all bookings for this barber on this day, sorted by time
+      const barberBookings = dayBookings
         .filter((b) => b.barberId === selectedBarberId)
-        .map((b) => b.queueNumber)
-        .sort((a, b) => a - b)
+        .sort((a, b) => {
+          const aTime = parseInt(a.bookingTime.split('T')[1].substring(0, 5).replace(':', ''))
+          const bTime = parseInt(b.bookingTime.split('T')[1].substring(0, 5).replace(':', ''))
+          return aTime - bTime
+        })
 
-      const nextQueue = barberQueue.length === 0 ? 1 : Math.max(...barberQueue) + 1
+      // Count bookings before this time
+      const bookingsBefore = barberBookings.filter((b) => {
+        const bHour = parseInt(b.bookingTime.split('T')[1].substring(0, 2))
+        const bMin = parseInt(b.bookingTime.split('T')[1].substring(3, 5))
+        const bTime = bHour * 100 + bMin
+        const newTime = newBookingHour * 100 + newBookingMin
+        return bTime < newTime
+      })
+
+      const nextQueue = bookingsBefore.length + 1
       return { queueNumber: nextQueue, recommendedBarberId: selectedBarberId }
     }
 
@@ -117,14 +135,27 @@ export const useBookings = () => {
         (current.count < prev.count) ? current : prev
       )
 
-      const barberQueue = dayBookings
+      // Get all bookings for the recommended barber, sorted by time
+      const barberBookings = dayBookings
         .filter((b) => b.barberId === recommendedBarber.id)
-        .map((b) => b.queueNumber)
-        .sort((a, b) => a - b)
+        .sort((a, b) => {
+          const aTime = parseInt(a.bookingTime.split('T')[1].substring(0, 5).replace(':', ''))
+          const bTime = parseInt(b.bookingTime.split('T')[1].substring(0, 5).replace(':', ''))
+          return aTime - bTime
+        })
 
-      const nextQueue = barberQueue.length === 0 ? 1 : Math.max(...barberQueue) + 1
+      // Count bookings before this time
+      const bookingsBefore = barberBookings.filter((b) => {
+        const bHour = parseInt(b.bookingTime.split('T')[1].substring(0, 2))
+        const bMin = parseInt(b.bookingTime.split('T')[1].substring(3, 5))
+        const bTime = bHour * 100 + bMin
+        const newTime = newBookingHour * 100 + newBookingMin
+        return bTime < newTime
+      })
 
-      console.log(`Smart queue calculated: Queue #${nextQueue} for barber ${recommendedBarber.id}`)
+      const nextQueue = bookingsBefore.length + 1
+
+      console.log(`Smart queue calculated: Queue #${nextQueue} for barber ${recommendedBarber.id} at ${bookingTime}`)
       return { queueNumber: nextQueue, recommendedBarberId: recommendedBarber.id }
     } catch (err) {
       console.error('Error in smart queue calculation:', err)
@@ -145,6 +176,7 @@ export const useBookings = () => {
         return (
           bDate === bookingDate &&
           b.status !== 'cancelled' &&
+          b.status !== 'completed' &&
           b.queueNumber < queueNumber
         )
       })
@@ -174,7 +206,8 @@ export const useBookings = () => {
     const timeWindow = 15 * 60000 // 15 minute window
 
     const conflictingBooking = bookings.find((b) => {
-      if (b.status === 'cancelled') return false
+      // استبعد الحجوزات المكتملة والملغاة
+      if (b.status === 'cancelled' || b.status === 'completed') return false
 
       const bookingTimeMs = new Date(b.bookingTime).getTime()
       const requestTimeMs = new Date(bookingTime).getTime()
