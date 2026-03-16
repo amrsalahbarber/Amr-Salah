@@ -35,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> =({ isOpen, onClose, currentPath, o
     { icon: <Home size={20} />, label: t('navigation.dashboard'), href: '/' },
     { icon: <ShoppingCart size={20} />, label: t('navigation.pos'), href: '/pos' },
     { icon: <Users size={20} />, label: t('navigation.clients'), href: '/clients' },
+    { icon: <Scissors size={20} />, label: 'الحلاقين', href: '/barbers' },
     { icon: <Scissors size={20} />, label: t('navigation.services'), href: '/services' },
     { icon: <FileText size={20} />, label: 'السجلات اليومية', href: '/logs' },
     { icon: <DollarSign size={20} />, label: t('navigation.expenses'), href: '/expenses' },

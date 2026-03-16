@@ -8,6 +8,7 @@ import { useTransactions } from '../db/hooks/useTransactions'
 import { useVisitLogs } from '../db/hooks/useVisitLogs'
 import { useServiceVariants } from '../db/hooks/useServiceVariants'
 import { useSettings } from '../db/hooks/useSettings'
+import { useBarbers } from '../db/hooks/useBarbers'
 import { appEmitter } from '../utils/eventEmitter'
 import { getEgyptDateString, getEgyptTimeString } from '../utils/egyptTime'
 import toast from 'react-hot-toast'
@@ -41,6 +42,7 @@ export const POS: React.FC = () => {
   const { addVisitLog } = useVisitLogs()
   const { getVariantsByServiceId } = useServiceVariants()
   const { getSetting } = useSettings()
+  const { barbers } = useBarbers()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedClient, setSelectedClient] = useState<any>(null)
@@ -649,15 +651,15 @@ export const POS: React.FC = () => {
               <select
                 value={selectedBarber?.id || ''}
                 onChange={(e) => {
-                  const barber = clients.find(c => c.id === e.target.value)
+                  const barber = barbers.find(b => b.id === e.target.value)
                   setSelectedBarber(barber || null)
                 }}
                 className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
               >
                 <option value="">اختر الحلاق (اختياري)</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    ✂️ {client.name}
+                {barbers.filter(b => b.active).map((barber) => (
+                  <option key={barber.id} value={barber.id}>
+                    ✂️ {barber.name}
                   </option>
                 ))}
               </select>
