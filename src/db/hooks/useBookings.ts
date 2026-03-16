@@ -20,7 +20,26 @@ export const useBookings = () => {
 
       if (error) throw error
       console.log('Bookings fetched:', data?.length || 0, 'records')
-      setBookings(data || [])
+
+      // Convert lowercase database field names to camelCase
+      const normalizedData = (data || []).map((b: any) => ({
+        id: b.id,
+        clientId: b.clientid,
+        clientName: b.clientname,
+        clientPhone: b.clientphone,
+        barberId: b.barberid,
+        barberName: b.barbername,
+        serviceType: b.servicetype,
+        bookingTime: b.bookingtime,
+        duration: b.duration,
+        queueNumber: b.queuenumber,
+        status: b.status,
+        notes: b.notes,
+        createdAt: b.createdat,
+        updatedAt: b.updatedat,
+      }))
+
+      setBookings(normalizedData)
       setError(null)
     } catch (err: any) {
       console.error('Error fetching bookings:', err)
