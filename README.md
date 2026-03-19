@@ -303,6 +303,91 @@ vercel
 
 ---
 
+## 🏢 **NEW: Multi-Tenant SaaS System** ✨
+
+This system has been upgraded to a **production-ready SaaS platform**! Multiple barbershop owners can now use the same system with complete data isolation.
+
+### SaaS Features ✅
+
+#### 🔐 Authentication System
+- Unified login for both admins and shop owners
+- Automatic role detection
+- Route-based access control
+- Session management with logout
+
+#### 🏪 Multi-Tenancy
+- Complete data isolation per shop
+- Row-Level Security (RLS) enforced
+- All queries automatically filtered by shop_id
+- Zero cross-shop data visibility
+
+#### 👨‍💼 Admin Panel
+- **Admin Dashboard**: System-wide statistics (total shops, active shops, revenue)
+- **Shop Management**: View/update all shops, manage subscription status
+- **Plan Management**: Create/edit/delete pricing plans
+
+#### 💳 Billing & Subscription
+- **3 Pricing Models**:
+  - Per Transaction (e.g., $5/booking)
+  - Per Service (e.g., $8/service item)
+  - Quota Plan (e.g., $99/month for 100 transactions)
+- **Automatic Usage Tracking**: Database triggers log all billable actions
+- **Subscription Status**: Active, expiring, expired, suspended
+- **Quota Management**: Track usage and enforce limits
+
+#### 📊 Subscription Alerts
+- Real-time status display on dashboard
+- Color-coded alerts (green/yellow/orange/red)
+- Shows days remaining, quota usage, plan details
+- Automatic refresh every minute
+
+### Test the SaaS System
+
+**Admin Account:**
+```
+Email: yaa2003ya@gmail.com
+Role: Administrator
+Access: /admin (dashboard, shops, plans management)
+```
+
+**Shop Owner Account:**
+```
+Email: shop1@gmail.com
+Role: Shop Owner
+Access: /dashboard (shop-specific features)
+```
+
+### SaaS Architecture
+
+```
+Public Internet
+    ↓
+[Login Page] → Auto Role Detection
+    ↓              ↓
+Admin Route    Shop Route
+/admin         /dashboard
+/admin/shops   /pos
+/admin/plans   /clients
+               /services
+                   ↓
+            Supabase Auth + RLS
+                   ↓
+            PostgreSQL Database
+```
+
+### Complete SaaS Documentation
+
+📖 **For detailed SaaS documentation, see: [README_SAAS.md](README_SAAS.md)**
+
+This includes:
+- Complete feature documentation
+- Database schema details
+- Deployment instructions
+- Testing scenarios
+- Troubleshooting guide
+
+---
+
 ## 📞 Support & Feedback
 
 For issues, bugs, or feature requests, create an issue in the repository.
