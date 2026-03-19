@@ -74,7 +74,10 @@
     "quick_actions": "إجراءات سريعة",
     "new_sale": "عملية جديدة",
     "add_client": "إضافة عميل",
-    "add_expense": "إضافة مصروف"
+    "add_expense": "إضافة مصروف",
+    "transactions": "المعاملات",
+    "expenses": "المصروفات",
+    "last_updated": "آخر تحديث"
   },
   "pos": {
     "title": "الكاشير",
@@ -279,5 +282,16 @@
     "invalid_price": "السعر يجب أن يكون رقم موجب",
     "network_error": "خطأ في الاتصال",
     "database_error": "خطأ في قاعدة البيانات"
+  },
+  "pages": {
+    "barbers_title": "الحلاقين",
+    "barbers_count": "عدد الحلاقين",
+    "monthly_revenue": "إجمالي الأرباح هذا الشهر",
+    "barber_stats": "إحصائيات الحلاق",
+    "total_clients": "إجمالي العملاء",
+    "month_revenue": "أرباح الشهر",
+    "add_barber": "إضافة حلاق جديد",
+    "barber_name": "اسم الحلاق",
+    "barber_phone": "التليفون"
   }
 }

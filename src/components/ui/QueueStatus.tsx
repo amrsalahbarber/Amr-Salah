@@ -56,14 +56,16 @@ export const QueueStatus: React.FC = () => {
           setQueueInfo({
             peopleAhead: 0,
             waitingMinutes: 0,
-            currentTime: currentTime.toLocaleTimeString('ar-EG', {
+            currentTime: currentTime.toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
               second: '2-digit',
+              hour12: true,
             }),
-            estimatedTime: currentTime.toLocaleTimeString('ar-EG', {
+            estimatedTime: currentTime.toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
+              hour12: true,
             }),
             isWaiting: false,
           })
@@ -104,15 +106,15 @@ export const QueueStatus: React.FC = () => {
         setQueueInfo({
           peopleAhead,
           waitingMinutes: Math.max(0, totalWaitMinutes),
-          currentTime: currentTime.toLocaleTimeString('ar-EG', {
+          currentTime: currentTime.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
+            hour12: true,
           }),
-          estimatedTime: finalEstimatedTime.toLocaleTimeString('ar-EG', {
+          estimatedTime: finalEstimatedTime.toLocaleTimeString('en-US', {
             hour: '2-digit',
-            minute: '2-digit',
-          }),
+            minute: '2-digit',            hour12: true,          }),
           isWaiting: peopleAhead > 0,
         })
       } catch (error) {
@@ -223,10 +225,11 @@ export const QueueStatus: React.FC = () => {
             animate={{ opacity: 1 }}
             className="text-lg font-mono font-bold text-white"
           >
-            {currentTime.toLocaleTimeString('ar-EG', {
+            {currentTime.toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
               second: '2-digit',
+              hour12: true,
             })}
           </motion.div>
         </div>

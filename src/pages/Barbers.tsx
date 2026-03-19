@@ -144,13 +144,13 @@ export const Barbers: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">الحلاقين</h1>
+        <h1 className="text-3xl font-bold text-white">{t('pages.barbers_title')}</h1>
         <button
           onClick={openAddModal}
           className="px-4 py-2 bg-gold-400 text-black rounded-lg font-semibold hover:bg-gold-500 transition flex items-center gap-2"
         >
           <Plus size={20} />
-          إضافة حلاق
+          {t('common.add')} {t('pages.barbers_title')}
         </button>
       </div>
 
@@ -159,7 +159,7 @@ export const Barbers: React.FC = () => {
         <GlassCard className="bg-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm">عدد الحلاقين</p>
+              <p className="text-gray-400 text-sm">{t('pages.barbers_count')}</p>
               <p className="text-3xl font-bold text-white mt-2">{barbers.length}</p>
             </div>
             <Users size={40} className="text-gold-400" />
@@ -169,11 +169,11 @@ export const Barbers: React.FC = () => {
         <GlassCard className="bg-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm">إجمالي الأرباح هذا الشهر</p>
+              <p className="text-gray-400 text-sm">{t('pages.monthly_revenue')}</p>
               <p className="text-3xl font-bold text-white mt-2">
-                {totalMonthlyRevenue.toLocaleString('ar-EG')}
+                {totalMonthlyRevenue.toLocaleString('en-US')}
               </p>
-              <p className="text-xs text-gray-500 mt-1">ج.م</p>
+              <p className="text-xs text-gray-500 mt-1">{t('common.currency')}</p>
             </div>
             <DollarSign size={40} className="text-green-400" />
           </div>

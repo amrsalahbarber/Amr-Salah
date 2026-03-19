@@ -57,6 +57,16 @@
     "analytics": "Analytics",
     "settings": "Settings"
   },
+  "pages": {
+    "barbers_title": "Barbers",
+    "barbers_count": "Number of Barbers",
+    "monthly_revenue": "Monthly Revenue Total",
+    "barber_stats": "Barber Statistics",
+    "total_clients": "Total Clients",
+    "barber_phone": "Barber Phone",
+    "barber_email": "Barber Email",
+    "barber_earnings": "Barber Earnings"
+  },
   "dashboard": {
     "title": "Dashboard",
     "today_revenue": "Today's Revenue",
@@ -74,7 +84,10 @@
     "quick_actions": "Quick Actions",
     "new_sale": "New Sale",
     "add_client": "Add Client",
-    "add_expense": "Add Expense"
+    "add_expense": "Add Expense",
+    "transactions": "Transactions",
+    "expenses": "Expenses",
+    "last_updated": "Last Updated"
   },
   "pos": {
     "title": "Cashier",

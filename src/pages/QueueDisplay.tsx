@@ -137,11 +137,10 @@ export const QueueDisplay: React.FC = () => {
                 animate={{ opacity: 1 }}
                 className="text-4xl font-black text-green-400 font-mono"
               >
-                {currentTime.toLocaleTimeString('ar-EG', {
+                {currentTime.toLocaleTimeString('en-US', {
                   hour: '2-digit',
                   minute: '2-digit',
-                  second: '2-digit',
-                })}
+                  second: '2-digit',                  hour12: true,                })}
               </motion.div>
             </motion.div>
 

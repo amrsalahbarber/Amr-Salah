@@ -46,7 +46,7 @@ export const Dashboard: React.FC = () => {
       try {
         await fetchTransactions()
         await fetchExpenses()
-        setLastUpdated(new Date().toLocaleTimeString('ar-EG'))
+        setLastUpdated(new Date().toLocaleTimeString('en-US', { hour12: true }))
         console.log('Dashboard: Data refreshed successfully')
       } catch (err: any) {
         console.error('Dashboard: Error refreshing data:', err)
@@ -118,7 +118,7 @@ export const Dashboard: React.FC = () => {
       console.log('Dashboard: Manual refresh started')
       await fetchTransactions()
       await fetchExpenses()
-      setLastUpdated(new Date().toLocaleTimeString('ar-EG'))
+      setLastUpdated(new Date().toLocaleTimeString('en-US', { hour12: true }))
       console.log('Dashboard: Manual refresh completed')
     } catch (err: any) {
       console.error('Dashboard: Manual refresh error:', err)
@@ -181,14 +181,14 @@ export const Dashboard: React.FC = () => {
           className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 bg-gold-400/20 text-gold-400 border border-gold-400/20 rounded-lg hover:bg-gold-400/30 disabled:opacity-50 transition text-xs md:text-sm"
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-          <span className="hidden sm:inline">تحديث</span>
+          <span className="hidden sm:inline">{t('common.refresh')}</span>
         </motion.button>
       </motion.div>
 
       {/* Info */}
       <div className="text-xs text-gray-400 flex justify-between items-center">
-        <span>المعاملات: {transactions?.length || 0} | المصروفات: {expenses?.length || 0}</span>
-        {lastUpdated && <span>آخر تحديث: {lastUpdated}</span>}
+        <span>{t('dashboard.transactions')}: {transactions?.length || 0} | {t('dashboard.expenses')}: {expenses?.length || 0}</span>
+        {lastUpdated && <span>{t('dashboard.last_updated')}: {lastUpdated}</span>}
       </div>
 
       {/* KPI Cards - Grid Responsive */}
