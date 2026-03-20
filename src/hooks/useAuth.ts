@@ -21,6 +21,8 @@ export interface AuthUser {
  * - Gets shop_id for shop owners
  * - Handles login/logout
  * - Provides loading and error states
+ * - Never gets stuck in loading state (8-second timeout)
+ * - Single source of truth: onAuthStateChange
  */
 export function useAuth() {
   const [state, setState] = useState<AuthUser>({
@@ -77,110 +79,22 @@ export function useAuth() {
     }
   }, [])
 
-  // Initialize auth state on mount
-  useEffect(() => {
-    let mounted = true
-
-    const initializeAuth = async () => {
-      try {
-        // Get current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
-        if (sessionError) {
-          throw sessionError
-        }
-
-        if (!session) {
-          if (mounted) {
-            setState(prev => ({
-              ...prev,
-              user: null,
-              session: null,
-              role: null,
-              shopId: null,
-              loading: false,
-            }))
-          }
-          return
-        }
-
-        // User is logged in, determine role
-        const userId = session.user.id
-        const isAdmin = await checkIfAdmin(userId)
-
-        if (isAdmin) {
-          if (mounted) {
-            setState(prev => ({
-              ...prev,
-              user: session.user,
-              session,
-              role: 'admin',
-              shopId: null,
-              loading: false,
-            }))
-          }
-        } else {
-          // Check if is shop owner
-          const shopId = await getShopId(userId)
-
-          if (shopId) {
-            if (mounted) {
-              setState(prev => ({
-                ...prev,
-                user: session.user,
-                session,
-                role: 'shop',
-                shopId,
-                loading: false,
-              }))
-            }
-          } else {
-            // Not admin, not shop owner - should not happen
-            if (mounted) {
-              setState(prev => ({
-                ...prev,
-                user: null,
-                session: null,
-                role: null,
-                shopId: null,
-                loading: false,
-                error: 'User not found in system',
-              }))
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        if (mounted) {
-          setState(prev => ({
-            ...prev,
-            loading: false,
-            error: error instanceof Error ? error.message : 'Authentication error',
-          }))
-        }
+  // Handle auth state changes - single source of truth
+  const handleAuthStateChange = useCallback(
+    async (session: Session | null) => {
+      if (!session) {
+        setState({
+          user: null,
+          session: null,
+          role: null,
+          shopId: null,
+          loading: false,
+          error: null,
+        })
+        return
       }
-    }
 
-    initializeAuth()
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!mounted) return
-
-        if (!session) {
-          setState({
-            user: null,
-            session: null,
-            role: null,
-            shopId: null,
-            loading: false,
-            error: null,
-          })
-          return
-        }
-
-        // User logged in, determine role
+      try {
         const userId = session.user.id
         const isAdmin = await checkIfAdmin(userId)
 
@@ -206,7 +120,7 @@ export function useAuth() {
               error: null,
             })
           } else {
-            // User exists but not admin or shop
+            // User exists but not admin or shop owner - sign out
             await supabase.auth.signOut()
             setState({
               user: null,
@@ -218,14 +132,52 @@ export function useAuth() {
             })
           }
         }
+      } catch (error) {
+        console.error('Auth state change error:', error)
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: error instanceof Error ? error.message : 'Authentication error',
+        }))
+      }
+    },
+    [checkIfAdmin, getShopId]
+  )
+
+  // Initialize auth on mount - uses onAuthStateChange as single source of truth
+  useEffect(() => {
+    let mounted = true
+    let timeoutId: NodeJS.Timeout
+
+    // Set 8-second timeout to prevent infinite loading state
+    timeoutId = setTimeout(() => {
+      if (mounted) {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: prev.error || 'Authentication check timed out',
+        }))
+      }
+    }, 8000)
+
+    // Listen for auth state changes - single source of truth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return
+
+        // Clear timeout when auth state is determined
+        clearTimeout(timeoutId)
+
+        await handleAuthStateChange(session)
       }
     )
 
     return () => {
       mounted = false
+      clearTimeout(timeoutId)
       subscription?.unsubscribe()
     }
-  }, [checkIfAdmin, getShopId])
+  }, [handleAuthStateChange])
 
   // Sign in function
   const signIn = useCallback(
