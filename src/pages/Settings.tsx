@@ -4,6 +4,7 @@ import { useLanguage } from '../hooks/useLanguage'
 import { useTheme } from '../hooks/useTheme'
 import { GlassCard } from '../components/ui/GlassCard'
 import { useSettings } from '../db/hooks/useSettings'
+import { useAuth } from '../hooks/useAuth'
 import { motion } from 'framer-motion'
 import { exportToJSON, importFromJSON } from '../utils/exportCSV'
 import toast from 'react-hot-toast'
@@ -13,34 +14,39 @@ export const Settings: React.FC = () => {
   const { t } = useTranslation()
   const { language, toggleLanguage } = useLanguage()
   const { theme, toggleTheme } = useTheme()
-  const { getSetting, updateSetting, fetchSettings } = useSettings()
+  const { shopId } = useAuth()
+  const { getSetting, updateSetting } = useSettings()
 
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [barbershopName, setBarbershopName] = useState('')
-  const [barbershopPhone, setBarbershopPhone] = useState('')
+  
+  // Local form state - separate from fetched data to prevent re-render clearing
+  const [formData, setFormData] = useState({
+    barbershopName: '',
+    barbershopPhone: '',
+  })
 
-  // Load settings on mount and when returning from edit
+  // Load settings once on mount - empty dependency array prevents re-runs
   useEffect(() => {
     const name = getSetting('barbershipName', 'My Barbershop')
     const phone = getSetting('barbershipPhone', '')
-    setBarbershopName(name)
-    setBarbershopPhone(phone)
-  }, [getSetting])
+    setFormData({
+      barbershopName: name,
+      barbershopPhone: phone,
+    })
+  }, []) // Only run once on mount
 
   const handleSaveSettings = async () => {
-    if (!barbershopName.trim()) {
+    if (!formData.barbershopName.trim()) {
       toast.error(t('settings.shop_name_required') || 'اسم المحل مطلوب')
       return
     }
 
     setIsSaving(true)
     try {
-      await updateSetting('barbershipName', barbershopName)
-      await updateSetting('barbershipPhone', barbershopPhone)
-      
-      // Refetch settings to ensure they're updated
-      await fetchSettings()
+      // Save both name and phone to settings
+      await updateSetting('barbershipName', formData.barbershopName)
+      await updateSetting('barbershipPhone', formData.barbershopPhone)
       
       toast.success(t('settings.save_success') || 'تم حفظ البيانات بنجاح ✅')
       setIsEditing(false)
@@ -53,11 +59,13 @@ export const Settings: React.FC = () => {
   }
 
   const handleCancel = () => {
-    // Reload from settings
+    // Reload form data from settings
     const name = getSetting('barbershipName', 'My Barbershop')
     const phone = getSetting('barbershipPhone', '')
-    setBarbershopName(name)
-    setBarbershopPhone(phone)
+    setFormData({
+      barbershopName: name,
+      barbershopPhone: phone,
+    })
     setIsEditing(false)
   }
 
@@ -113,8 +121,8 @@ export const Settings: React.FC = () => {
               <label className="block text-sm text-gray-300 mb-2">{t('settings.barbershop_name')}</label>
               <input
                 type="text"
-                value={barbershopName}
-                onChange={(e) => setBarbershopName(e.target.value)}
+                value={formData.barbershopName}
+                onChange={(e) => setFormData(prev => ({ ...prev, barbershopName: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-gold-400 focus:outline-none"
                 placeholder="أدخل اسم المحل"
               />
@@ -124,8 +132,8 @@ export const Settings: React.FC = () => {
               <label className="block text-sm text-gray-300 mb-2">رقم الهاتف</label>
               <input
                 type="tel"
-                value={barbershopPhone}
-                onChange={(e) => setBarbershopPhone(e.target.value)}
+                value={formData.barbershopPhone}
+                onChange={(e) => setFormData(prev => ({ ...prev, barbershopPhone: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-gold-400 focus:outline-none"
                 placeholder="أدخل رقم الهاتف (مثل: 01012345678)"
               />
@@ -154,11 +162,11 @@ export const Settings: React.FC = () => {
           <div className="space-y-3 bg-gray-800/30 p-4 rounded-lg">
             <div>
               <p className="text-xs text-gray-400">اسم المحل</p>
-              <p className="text-lg font-semibold text-white">{barbershopName || 'لم يتم التحديد'}</p>
+              <p className="text-lg font-semibold text-white">{formData.barbershopName || 'لم يتم التحديد'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-400">رقم الهاتف</p>
-              <p className="text-lg font-semibold text-white">{barbershopPhone || 'لم يتم التحديد'}</p>
+              <p className="text-lg font-semibold text-white">{formData.barbershopPhone || 'لم يتم التحديد'}</p>
             </div>
           </div>
         )}
