@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useSettings } from '@/db/hooks/useSettings'
+import { supabase } from '@/db/supabase'
 
 interface ReceiptItem {
   name: string
@@ -25,6 +25,28 @@ interface ReceiptProps {
 // Convert numbers to Arabic-Indic numerals (٠١٢٣٤٥٦٧٨٩)
 const toArabicNumerals = (n: number | string): string => {
   return String(n).replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d])
+}
+
+// Format time with Egypt timezone
+const formatEgyptTime = (time: string): string => {
+  try {
+    // If already formatted in Arabic, return as-is
+    if (/[\u0600-\u06FF]/.test(time)) {
+      return time
+    }
+    
+    // Parse time string (HH:MM or HH:MM:SS format)
+    const parts = time.split(':')
+    if (parts.length >= 2) {
+      const hours = toArabicNumerals(parts[0])
+      const minutes = toArabicNumerals(parts[1])
+      const suffix = parseInt(parts[0]) >= 12 ? 'ظهراً' : 'صباحاً'
+      return `${hours}:${minutes} ${suffix}`
+    }
+    return time
+  } catch {
+    return time
+  }
 }
 
 // Map payment methods to Arabic
@@ -53,26 +75,61 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>(
     ref
   ) => {
     const { shopId } = useAuth()
-    const { getSetting } = useSettings()
-    const [shopName, setShopName] = useState<string>('')
+    const [shopName, setShopName] = useState<string>('محل الحلاقة')
     const [shopPhone, setShopPhone] = useState<string>('')
+    const [formattedTime, setFormattedTime] = useState<string>('')
 
-    // Fetch shop settings
+    // Fetch shop settings directly from database
     useEffect(() => {
-      const name = getSetting('barbershipName', 'محل الحلاقة')
-      const phone = getSetting('barbershipPhone', '')
-      setShopName(name)
-      setShopPhone(phone)
+      if (!shopId) return
+
+      const fetchShopSettings = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('settings')
+            .select('key, value')
+            .eq('shop_id', shopId)
+
+          if (error) throw error
+
+          // Parse settings
+          const settingsMap: Record<string, any> = {}
+          data?.forEach((item: any) => {
+            settingsMap[item.key] = item.value
+          })
+
+          // Set shop name and phone from fetched settings
+          setShopName(settingsMap['barbershipName'] || 'محل الحلاقة')
+          setShopPhone(settingsMap['barbershipPhone'] || '')
+        } catch (err) {
+          console.error('Error fetching receipt settings:', err)
+          setShopName('محل الحلاقة')
+          setShopPhone('')
+        }
+      }
+
+      fetchShopSettings()
     }, [shopId])
+
+    // Format time with proper timezone display
+    useEffect(() => {
+      setFormattedTime(formatEgyptTime(time))
+    }, [time])
 
     // Extract last 4 characters from transaction ID
     const receiptNumber = transactionId.slice(-4).toUpperCase()
 
-    // Format discount display
+    // Calculate actual discount amount for display
+    const discountAmount =
+      discountType === 'percentage'
+        ? (subtotal * discount) / 100
+        : discount
+
+    // Format discount label
     const discountLabel =
       discountType === 'percentage'
-        ? `${toArabicNumerals(discount)}%`
-        : `${toArabicNumerals(discount.toFixed(2))} ج.م`
+        ? `${toArabicNumerals(discount.toFixed(0))}%`
+        : `ج.م`
 
     return (
       <div
@@ -129,8 +186,8 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>(
 
         {/* Date & Time */}
         <div style={{ textAlign: 'center', fontSize: '10px', marginBottom: '6px' }}>
-          <div>التاريخ: {date}</div>
-          <div>الوقت: {time}</div>
+          <div>التاريخ: {toArabicNumerals(date)}</div>
+          <div>الوقت: {formattedTime}</div>
         </div>
 
         {/* Divider */}
@@ -199,9 +256,9 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>(
             <span style={{ fontWeight: 'bold' }}>{toArabicNumerals(subtotal.toFixed(2))} ج.م</span>
             <span>المجموع:</span>
           </div>
-          {discount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#c41e3a' }}>
-              <span style={{ fontWeight: 'bold' }}>-{toArabicNumerals(discount.toFixed(2))} ج.م</span>
+          {discountAmount > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#c41e3a', marginBottom: '2px' }}>
+              <span style={{ fontWeight: 'bold' }}>-{toArabicNumerals(discountAmount.toFixed(2))} ج.م</span>
               <span>الخصم ({discountLabel}):</span>
             </div>
           )}
@@ -248,7 +305,7 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>(
         <div style={{ textAlign: 'center', fontSize: '8px', marginTop: '8px', paddingTop: '4px', borderTop: '1px solid #000' }}>
           <div style={{ letterSpacing: '2px', marginBottom: '2px' }}>─────────────────────</div>
           <div style={{ fontWeight: 'bold', marginBottom: '1px' }}>YoussefAhmed</div>
-          <div style={{ marginBottom: '2px' }}>01000139417</div>
+          <div style={{ marginBottom: '2px' }}>{toArabicNumerals('01000139417')}</div>
           <div style={{ marginBottom: '2px' }}>Powered by YA Tech</div>
           <div style={{ letterSpacing: '2px' }}>─────────────────────</div>
         </div>
