@@ -4,7 +4,7 @@ import { supabase } from '@/db/supabase'
 import { Modal } from '@/components/ui/Modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import toast from 'react-hot-toast'
-import { Trash2, Edit2, Plus, Calendar } from 'lucide-react'
+import { Trash2, Edit2, Plus } from 'lucide-react'
 
 interface Plan {
   id: string
@@ -23,6 +23,7 @@ interface ShopWithPlan {
   subscription_end_date: string | null
   plan_id: string | null
   plans: Plan | null
+  created_at: string
 }
 
 export const AdminShops = () => {
@@ -76,6 +77,7 @@ export const AdminShops = () => {
           subscription_status,
           subscription_end_date,
           plan_id,
+          created_at,
           plans (
             id,
             name,
