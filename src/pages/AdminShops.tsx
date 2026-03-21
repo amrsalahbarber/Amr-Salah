@@ -116,6 +116,12 @@ export const AdminShops = () => {
       return
     }
 
+    // Validate password length (Supabase requires min 6 chars)
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
     try {
       setCreatingShop(true)
 
@@ -140,20 +146,28 @@ export const AdminShops = () => {
       }
 
       // Create shop
-      const { error: shopError } = await supabase.from('shops').insert([
-        {
-          name: formData.name,
-          owner_email: formData.owner_email,
-          plan_id: formData.plan_id || null,
-          subscription_end_date: formData.subscription_end_date,
-          subscription_status: 'active',
-          user_id: authData.user?.id,
-        },
-      ])
+      const { data: shopData, error: shopError } = await supabase
+        .from('shops')
+        .insert([
+          {
+            name: formData.name,
+            owner_email: formData.owner_email,
+            plan_id: formData.plan_id || null,
+            subscription_end_date: formData.subscription_end_date,
+            subscription_status: 'active',
+            auth_user_id: authData.user?.id,
+          },
+        ])
+        .select()
 
       if (shopError) throw shopError
 
-      toast.success(t('admin.shops.shop_created'))
+      const newShopId = shopData?.[0]?.id
+      if (newShopId) {
+        toast.success(`${t('admin.shops.shop_created')} (ID: ${newShopId.substring(0, 8)})`)
+      } else {
+        toast.success(t('admin.shops.shop_created'))
+      }
       setFormData({ name: '', owner_email: '', password: '', plan_id: '', subscription_end_date: '' })
       setShowCreateModal(false)
       await fetchShopsAndPlans()
