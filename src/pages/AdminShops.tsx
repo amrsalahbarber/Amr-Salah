@@ -184,10 +184,15 @@ export const AdminShops = () => {
   // Handle opening edit modal
   const handleOpenEdit = (shop: ShopWithPlan) => {
     setSelectedShop(shop)
+    // Auto-populate with shop's current end date (formatted as YYYY-MM-DD for date input)
+    const endDate = shop.subscription_end_date 
+      ? new Date(shop.subscription_end_date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+    
     setEditData({
       name: shop.name,
       plan_id: shop.plan_id || '',
-      subscription_end_date: shop.subscription_end_date || '',
+      subscription_end_date: endDate,
       subscription_status: shop.subscription_status,
     })
     setShowEditModal(true)
