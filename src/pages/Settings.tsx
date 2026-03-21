@@ -13,9 +13,10 @@ export const Settings: React.FC = () => {
   const { t } = useTranslation()
   const { language, toggleLanguage } = useLanguage()
   const { theme, toggleTheme } = useTheme()
-  const { getSetting, updateSetting } = useSettings()
+  const { getSetting, updateSetting, fetchSettings } = useSettings()
 
   const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [barbershopName, setBarbershopName] = useState('')
   const [barbershopPhone, setBarbershopPhone] = useState('')
 
@@ -25,30 +26,34 @@ export const Settings: React.FC = () => {
     const phone = getSetting('barbershipPhone', '')
     setBarbershopName(name)
     setBarbershopPhone(phone)
-  }, [])
+  }, [getSetting])
 
   const handleSaveSettings = async () => {
     if (!barbershopName.trim()) {
-      toast.error('اسم المحل مطلوب')
+      toast.error(t('settings.shop_name_required') || 'اسم المحل مطلوب')
       return
     }
+
+    setIsSaving(true)
     try {
       await updateSetting('barbershipName', barbershopName)
       await updateSetting('barbershipPhone', barbershopPhone)
-      toast.success('تم حفظ البيانات بنجاح ✅')
+      
+      // Refetch settings to ensure they're updated
+      await fetchSettings()
+      
+      toast.success(t('settings.save_success') || 'تم حفظ البيانات بنجاح ✅')
       setIsEditing(false)
-      // Reload to show updated values
-      const name = getSetting('barbershipName', 'My Barbershop')
-      const phone = getSetting('barbershipPhone', '')
-      setBarbershopName(name)
-      setBarbershopPhone(phone)
-    } catch (err) {
-      toast.error('خطأ في حفظ البيانات')
+    } catch (err: any) {
+      console.error('Save error:', err)
+      toast.error(err.message || t('settings.save_error') || 'خطأ في حفظ البيانات')
+    } finally {
+      setIsSaving(false)
     }
   }
 
   const handleCancel = () => {
-    // Reload from database on cancel
+    // Reload from settings
     const name = getSetting('barbershipName', 'My Barbershop')
     const phone = getSetting('barbershipPhone', '')
     setBarbershopName(name)
@@ -129,17 +134,19 @@ export const Settings: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleSaveSettings}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gold-400/20 text-gold-400 border border-gold-400/20 rounded-lg font-bold hover:bg-gold-400/30 transition"
+                disabled={isSaving}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gold-400/20 text-gold-400 border border-gold-400/20 rounded-lg font-bold hover:bg-gold-400/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save size={16} />
-                حفظ
+                {isSaving ? t('common.saving') || 'جاري الحفظ...' : t('common.save') || 'حفظ'}
               </button>
               <button
                 onClick={handleCancel}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-400/20 rounded-lg font-bold hover:bg-red-500/30 transition"
+                disabled={isSaving}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-400/20 rounded-lg font-bold hover:bg-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <X size={16} />
-                إلغاء
+                {t('common.cancel') || 'إلغاء'}
               </button>
             </div>
           </div>

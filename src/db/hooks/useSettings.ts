@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase, Settings } from '../supabase'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/hooks/useAuth'
 
 export const useSettings = () => {
+  const { shopId } = useAuth()
   const [settings, setSettings] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -10,9 +12,18 @@ export const useSettings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true)
+      
+      // Only fetch if we have a shop ID
+      if (!shopId) {
+        setSettings({})
+        setError(null)
+        return
+      }
+
       const { data, error } = await supabase
         .from('settings')
         .select('*')
+        .eq('shop_id', shopId)
 
       if (error) throw error
       
@@ -25,7 +36,7 @@ export const useSettings = () => {
       setError(null)
     } catch (err: any) {
       setError(err.message)
-      toast.error(err.message)
+      console.error('Error fetching settings:', err.message)
     } finally {
       setLoading(false)
     }
@@ -33,16 +44,23 @@ export const useSettings = () => {
 
   useEffect(() => {
     fetchSettings()
-  }, [])
+  }, [shopId])
 
   const updateSetting = async (key: string, value: any) => {
     try {
+      if (!shopId) {
+        throw new Error('No shop ID available')
+      }
+
       const { error } = await supabase
         .from('settings')
         .upsert({
+          shop_id: shopId,
           key,
           value,
-          updatedAt: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'shop_id,key'
         })
 
       if (error) throw error
@@ -52,7 +70,6 @@ export const useSettings = () => {
         [key]: value,
       }))
       
-      toast.success('Setting updated')
       return true
     } catch (err: any) {
       toast.error(err.message)
@@ -81,6 +98,8 @@ export const useSettings = () => {
   }
 
   const initializeSettings = async () => {
+    if (!shopId) return
+
     const defaultSettings = {
       barbershipName: 'My Barbershop',
       barbershipAddress: '',
@@ -96,8 +115,9 @@ export const useSettings = () => {
         const existing = await supabase
           .from('settings')
           .select('key')
+          .eq('shop_id', shopId)
           .eq('key', key)
-          .single()
+          .maybeSingle()
 
         if (!existing.data) {
           await updateSetting(key, value)
