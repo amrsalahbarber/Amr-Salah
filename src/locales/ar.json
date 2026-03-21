@@ -321,7 +321,11 @@
       "transactions": "المعاملات",
       "services": "الخدمات",
       "over_quota": "تجاوز الحد",
-      "within_quota": "ضمن الحد"
+      "within_quota": "ضمن الحد",
+      "no_plan_assigned": "لم يتم تحديد خطة",
+      "contact_admin_plan": "يرجى التواصل مع الإدارة لتحديد خطة.",
+      "monthly_price": "السعر الشهري",
+      "price_per_unit": "السعر لكل وحدة"
     }
   },
   "errors": {

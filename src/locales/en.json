@@ -423,7 +423,11 @@
       "transactions": "Transactions",
       "services": "Services",
       "over_quota": "Over Quota",
-      "within_quota": "Within Quota"
+      "within_quota": "Within Quota",
+      "no_plan_assigned": "No Plan Assigned",
+      "contact_admin_plan": "Please contact the admin to assign a plan.",
+      "monthly_price": "Monthly Price",
+      "price_per_unit": "Price Per Unit"
     }
   },
   "errors": {

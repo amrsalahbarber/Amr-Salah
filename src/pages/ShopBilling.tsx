@@ -275,9 +275,26 @@ export const ShopBilling = () => {
                       : t('shop.billing.quota_plan')}
                 </p>
               </div>
+              {shopData.plan.pricing_type === 'quota' ? (
+                <div>
+                  <p className='text-xs text-slate-400'>{t('shop.billing.monthly_price')}</p>
+                  <p className='text-lg font-semibold text-gold-400'>{formatCurrency(shopData.plan.monthly_price || 0)}</p>
+                  <p className='text-xs text-slate-400 mt-1'>
+                    {t('shop.billing.quota_limit')}: {shopData.plan.quota_limit || 0} {t('shop.billing.transactions')}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className='text-xs text-slate-400'>{t('shop.billing.price_per_unit')}</p>
+                  <p className='text-lg font-semibold text-gold-400'>{formatCurrency(shopData.plan.price_per_unit || 0)}</p>
+                </div>
+              )}
             </div>
           ) : (
-            <p className='text-slate-400'>{t('common.error')}</p>
+            <div className='space-y-3'>
+              <p className='text-slate-300'>{t('shop.billing.no_plan_assigned')}</p>
+              <p className='text-xs text-slate-400'>{t('shop.billing.contact_admin_plan')}</p>
+            </div>
           )}
         </div>
 
@@ -286,7 +303,13 @@ export const ShopBilling = () => {
           <h3 className='text-sm font-semibold text-slate-200 mb-4'>{t('shop.billing.estimated_bill')}</h3>
           <p className='text-4xl font-bold text-gold-400 mb-2'>{formatCurrency(estimatedBill)}</p>
           <p className='text-xs text-slate-400'>
-            {shopData.plan?.pricing_type === 'quota' ? t('shop.billing.quota_plan') : `${currentMonthUsage} usage`}
+            {shopData.plan ? (
+              shopData.plan.pricing_type === 'quota' 
+                ? t('shop.billing.quota_plan') 
+                : `${t('shop.billing.usage_this_month')}: ${currentMonthUsage}`
+            ) : (
+              t('shop.billing.no_plan_assigned')
+            )}
           </p>
         </div>
       </div>
