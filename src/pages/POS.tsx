@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Modal } from '../components/ui/Modal'
+import { ReceiptTemplate } from '../components/receipt/ReceiptTemplate'
 import { X, Search, Trash2, Printer, Check } from 'lucide-react'
 import { useClients } from '../db/hooks/useClients'
 import { useServices } from '../db/hooks/useServices'
 import { useTransactions } from '../db/hooks/useTransactions'
 import { useVisitLogs } from '../db/hooks/useVisitLogs'
 import { useServiceVariants } from '../db/hooks/useServiceVariants'
-import { useSettings } from '../db/hooks/useSettings'
 import { useBarbers } from '../db/hooks/useBarbers'
 import { useBookings } from '../db/hooks/useBookings'
 import { checkSubscriptionStatus } from '../utils/subscriptionChecker'
@@ -24,6 +24,7 @@ interface CartItem {
 }
 
 interface CompletedTransaction {
+  transactionId: string
   clientName: string
   clientPhone: string
   barberName?: string
@@ -44,7 +45,6 @@ export const POS: React.FC = () => {
   const { addTransaction } = useTransactions()
   const { addVisitLog } = useVisitLogs()
   const { getVariantsByServiceId } = useServiceVariants()
-  const { getSetting } = useSettings()
   const { barbers } = useBarbers()
   const { getTodayBookings, updateBooking } = useBookings()
   const { shopId } = useAuth()
@@ -61,6 +61,7 @@ export const POS: React.FC = () => {
   const [completedTransaction, setCompletedTransaction] = useState<CompletedTransaction | null>(null)
   const [showReceipt, setShowReceipt] = useState(false)
   const [selectedBarber, setSelectedBarber] = useState<any>(null)
+  const receiptRef = useRef<HTMLDivElement>(null)
 
   // Load variants
   useEffect(() => {
@@ -164,7 +165,7 @@ export const POS: React.FC = () => {
       const timeStr = getEgyptTimeString()
 
       // Create transaction
-      await addTransaction({
+      const newTransaction = await addTransaction({
         clientId: selectedClient.id,
         clientName: selectedClient.name,
         clientPhone: selectedClient.phone,
@@ -179,6 +180,8 @@ export const POS: React.FC = () => {
         paymentMethod: paymentMethod as 'cash' | 'card' | 'wallet',
         barberId: selectedBarber?.id || undefined,
       })
+
+      const transactionId = newTransaction?.id || 'unknown'
 
       // Update client
       await updateClient(selectedClient.id, {
@@ -223,6 +226,7 @@ export const POS: React.FC = () => {
 
       // Show receipt
       setCompletedTransaction({
+        transactionId,
         clientName: selectedClient.name,
         clientPhone: selectedClient.phone,
         barberName: selectedBarber?.name || '',
@@ -252,21 +256,18 @@ export const POS: React.FC = () => {
   }
 
   const handlePrint = () => {
-    if (completedTransaction) {
-      const printWindow = window.open('', '', 'height=600,width=400')
+    if (receiptRef.current) {
+      const printWindow = window.open('', '', 'height=600,width=400,top=100,left=100')
       if (printWindow) {
-        // Get latest shop details from settings
-        const currentBarbershopName = getSetting('barbershipName', '💈 محل الحلاقة')
-        const currentBarbershopPhone = getSetting('barbershipPhone', '')
-
-        const receiptHTML = `
+        const receiptHTML = receiptRef.current.outerHTML
+        const printContent = `
           <!DOCTYPE html>
           <html dir="rtl" lang="ar">
           <head>
             <meta charset="UTF-8">
-            <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>الإيصال</title>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
             <style>
               * { 
                 margin: 0; 
@@ -279,181 +280,45 @@ export const POS: React.FC = () => {
                 padding: 0;
               }
               body { 
-                font-family: 'Arial', 'Helvetica', sans-serif;
+                font-family: 'Cairo', 'Arial', monospace;
                 font-size: 12px;
-                line-height: 1.5;
+                line-height: 1.6;
                 direction: rtl;
                 text-align: right;
                 background: white;
                 color: black;
               }
-              .receipt {
+              #receipt-container {
                 width: 80mm;
-                padding: 10px;
+                padding: 0;
                 margin: 0;
                 background: white;
-              }
-              .header {
-                text-align: center;
-                border-bottom: 2px solid black;
-                padding-bottom: 8px;
-                margin-bottom: 8px;
-              }
-              .store-name {
-                font-size: 14px;
-                font-weight: bold;
-                margin-bottom: 4px;
-              }
-              .receipt-title {
-                font-size: 11px;
-                font-weight: bold;
-              }
-              .divider {
-                border-bottom: 1px dashed black;
-                margin: 6px 0;
-                padding-bottom: 6px;
-              }
-              .section-title {
-                font-weight: bold;
-                margin-bottom: 4px;
-              }
-              .row {
-                display: flex;
-                justify-content: space-between;
-                font-size: 11px;
-                margin-bottom: 2px;
-              }
-              .total-row {
-                font-weight: bold;
-              }
-              .final-total {
-                text-align: center;
-                font-size: 16px;
-                font-weight: bold;
-                margin: 8px 0;
-              }
-              .footer {
-                text-align: center;
-                border-top: 1px solid black;
-                padding-top: 8px;
-                margin-top: 8px;
-                font-size: 10px;
+                font-family: 'Cairo', 'Arial', monospace;
               }
               @media print {
-                body { width: 80mm; margin: 0; padding: 0; }
-                .receipt { width: 80mm; margin: 0; padding: 10px; }
+                body > *:not(#receipt-container) { display: none !important; }
+                #receipt-container { 
+                  width: 80mm;
+                  font-family: 'Cairo', 'Arial', monospace;
+                  direction: rtl;
+                  margin: 0;
+                  padding: 10px;
+                }
               }
             </style>
           </head>
           <body>
-            <div class="receipt">
-              <!-- Header -->
-              <div class="header">
-                <div class="store-name">${currentBarbershopName}</div>
-                ${currentBarbershopPhone ? `<div class="receipt-title" style="font-size: 10px; margin-bottom: 2px;">📱 ${currentBarbershopPhone}</div>` : ''}
-                <div class="receipt-title">إيصال الدفع</div>
-              </div>
-
-              <!-- Date & Time -->
-              <div class="divider">
-                <div style="text-align: center; font-size: 11px;">
-                  <div>${completedTransaction.date}</div>
-                  <div>${completedTransaction.time}</div>
-                </div>
-              </div>
-
-              <!-- Client Info -->
-              <div class="divider">
-                <div class="row">
-                  <span>${completedTransaction.clientName}</span>
-                  <span>العميل:</span>
-                </div>
-                <div class="row">
-                  <span>${completedTransaction.clientPhone}</span>
-                  <span>الهاتف:</span>
-                </div>
-              </div>
-
-              <!-- Barber Info -->
-              ${completedTransaction.barberName ? `
-              <div class="divider">
-                <div class="row">
-                  <span>${completedTransaction.barberName}</span>
-                  <span>الحلاق:</span>
-                </div>
-                ${completedTransaction.barberPhone ? `
-                <div class="row">
-                  <span>${completedTransaction.barberPhone}</span>
-                  <span>هاتف الحلاق:</span>
-                </div>
-                ` : ''}
-              </div>
-              ` : ''}
-
-              <!-- Items -->
-              <div class="divider">
-                <div class="section-title">الخدمات:</div>
-                ${completedTransaction.items.map(item => `
-                <div class="row">
-                  <span>${item.price} ج.م</span>
-                  <span>${item.name}</span>
-                </div>
-                `).join('')}
-              </div>
-
-              <!-- Totals -->
-              <div class="divider">
-                <div class="row">
-                  <span>${completedTransaction.subtotal.toFixed(2)} ج.م</span>
-                  <span>الإجمالي:</span>
-                </div>
-                ${completedTransaction.discount > 0 ? `
-                <div class="row" style="color: red;">
-                  <span>-${completedTransaction.discount.toFixed(2)} ج.م</span>
-                  <span>الخصم:</span>
-                </div>
-                ` : ''}
-              </div>
-
-              <!-- Final Total -->
-              <div class="final-total">
-                ${completedTransaction.total.toFixed(2)} ج.م
-              </div>
-
-              <!-- Payment Method -->
-              <div class="divider">
-                <div style="text-align: center; font-size: 11px;">
-                  <div>طريقة الدفع: ${getPaymentLabel().replace(/[^\u0600-\u06FF\w\s]/g, '')}</div>
-                </div>
-              </div>
-
-              <!-- Footer -->
-              <div class="footer">
-                <div>شكرا لزيارتك</div>
-                <div>يرجى حفظ هذا الإيصال</div>
-              </div>
-            </div>
-
+            ${receiptHTML}
             <script>
               window.print();
             </script>
           </body>
           </html>
-        `;
-        
-        printWindow.document.open();
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
+        `
+        printWindow.document.open()
+        printWindow.document.write(printContent)
+        printWindow.document.close()
       }
-    }
-  }
-
-  const getPaymentLabel = () => {
-    switch (paymentMethod) {
-      case 'cash': return '💵 نقد'
-      case 'card': return '💳 بطاقة'
-      case 'wallet': return '📱 محفظة'
-      default: return paymentMethod
     }
   }
 
@@ -814,62 +679,28 @@ export const POS: React.FC = () => {
           setShowReceipt(false)
           setCompletedTransaction(null)
         }}
-        title="🧾 الإيصال"
+        title="🧾 الإيصال الضريبي"
         size="md"
       >
         {completedTransaction && (
           <div className="space-y-4">
             {/* Receipt Preview */}
-            <div className="bg-white text-black p-6 rounded-lg shadow-xl text-center text-sm" style={{ fontFamily: 'Arial, sans-serif' }}>
-              <div className="font-bold mb-2">متجر الحلاق</div>
-              <div className="text-xs text-gray-600 mb-4">إيصال الدفع</div>
-              
-              <div className="border-b border-gray-300 pb-3 mb-3 text-xs">
-                <div>{completedTransaction.date}</div>
-                <div>{completedTransaction.time}</div>
-              </div>
-
-              <div className="text-left mb-3">
-                <div className="text-xs"><strong>العميل:</strong> {completedTransaction.clientName}</div>
-                <div className="text-xs"><strong>الهاتف:</strong> {completedTransaction.clientPhone}</div>
-              </div>
-
-              <div className="border-b border-gray-300 pb-3 mb-3">
-                <div className="text-xs font-bold mb-2">الخدمات:</div>
-                {completedTransaction.items.map((item, idx) => (
-                  <div key={idx} className="flex justify-between text-xs mb-1">
-                    <span>{item.name}</span>
-                    <span>{item.price} ج.م</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="text-xs mb-3">
-                <div className="flex justify-between mb-1">
-                  <span>الإجمالي:</span>
-                  <span>{completedTransaction.subtotal.toFixed(2)} ج.م</span>
-                </div>
-                {completedTransaction.discount > 0 && (
-                  <div className="flex justify-between text-red-600">
-                    <span>الخصم:</span>
-                    <span>-{completedTransaction.discount.toFixed(2)} ج.م</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-b border-gray-300 py-2 mb-3">
-                <div className="text-lg font-bold">
-                  {completedTransaction.total.toFixed(2)} ج.م
-                </div>
-              </div>
-
-              <div className="text-xs mb-3">
-                <strong>طريقة الدفع:</strong> {getPaymentLabel().replace(/[^\u0600-\u06FF\w\s]/g, '')}
-              </div>
-
-              <div className="text-xs text-gray-600">
-                <div>شكرا لزيارتك</div>
-              </div>
+            <div className="bg-white text-black p-6 rounded-lg shadow-xl overflow-auto max-h-96" style={{ fontFamily: "'Cairo', Arial, sans-serif", direction: 'rtl' }}>
+              <ReceiptTemplate
+                ref={receiptRef}
+                transactionId={completedTransaction.transactionId}
+                clientName={completedTransaction.clientName}
+                clientPhone={completedTransaction.clientPhone}
+                barberName={completedTransaction.barberName}
+                date={completedTransaction.date}
+                time={completedTransaction.time}
+                items={completedTransaction.items}
+                subtotal={completedTransaction.subtotal}
+                discount={completedTransaction.discount}
+                discountType={completedTransaction.discountType}
+                total={completedTransaction.total}
+                paymentMethod={completedTransaction.paymentMethod}
+              />
             </div>
 
             {/* Action Buttons */}
