@@ -97,17 +97,37 @@ export const usePortalSettings = () => {
 
   const updatePortalSettings = async (updates: Partial<PortalSettings>) => {
     try {
-      if (!shopId || !portalSettings) {
-        throw new Error('No shop or portal settings available')
+      if (!shopId) {
+        throw new Error('معرّف المحل غير متوفر')
+      }
+
+      // If portal settings don't exist, create them first
+      let settingsToUpdate = portalSettings
+      if (!settingsToUpdate) {
+        await createDefaultPortalSettings()
+        // Fetch the newly created settings
+        await fetchPortalSettings()
+        
+        // Re-fetch to get the newly created settings
+        const { data: freshData } = await supabase
+          .from('portal_settings')
+          .select('*')
+          .eq('shop_id', shopId)
+          .single()
+        
+        if (!freshData) {
+          throw new Error('فشل إنشاء إعدادات البوابة')
+        }
+        settingsToUpdate = freshData as PortalSettings
       }
 
       // Check if slug is being changed and if it's unique
-      if (updates.portal_slug && updates.portal_slug !== portalSettings.portal_slug) {
+      if (updates.portal_slug && updates.portal_slug !== settingsToUpdate.portal_slug) {
         const { data: existingSlug, error: slugError } = await supabase
           .from('portal_settings')
           .select('id')
           .eq('portal_slug', updates.portal_slug)
-          .neq('id', portalSettings.id)
+          .neq('id', settingsToUpdate.id)
           .maybeSingle()
 
         if (slugError) throw slugError
@@ -122,7 +142,7 @@ export const usePortalSettings = () => {
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', portalSettings.id)
+        .eq('id', settingsToUpdate.id)
         .select()
         .single()
 

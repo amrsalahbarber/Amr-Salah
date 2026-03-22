@@ -15,7 +15,7 @@ export const Settings: React.FC = () => {
   const { language, toggleLanguage } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const { getSetting, updateSetting } = useSettings()
-  const { portalSettings, updatePortalSettings } = usePortalSettings()
+  const { portalSettings, updatePortalSettings, loading: portalLoading } = usePortalSettings()
 
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -102,6 +102,11 @@ export const Settings: React.FC = () => {
   const handlePortalSaveSettings = async () => {
     if (!portalFormData.portal_slug.trim()) {
       toast.error('معرّف البوابة مطلوب')
+      return
+    }
+
+    if (portalLoading) {
+      toast.error('جاري تحميل إعدادات البوابة، يرجى الانتظار')
       return
     }
 
@@ -254,15 +259,23 @@ export const Settings: React.FC = () => {
           {!isPortalEditing && (
             <button
               onClick={() => setIsPortalEditing(true)}
-              className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-400/30 rounded-lg hover:bg-blue-500/30 transition text-sm"
+              disabled={portalLoading}
+              className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-400/30 rounded-lg hover:bg-blue-500/30 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit2 size={16} />
-              تعديل
+              {portalLoading ? 'جاري التحميل...' : 'تعديل'}
             </button>
           )}
         </div>
 
-        {isPortalEditing ? (
+        {portalLoading && !isPortalEditing ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full border-4 border-blue-400/20 border-t-blue-400 animate-spin mx-auto mb-2" />
+              <p className="text-gray-400">جاري تحميل إعدادات البوابة...</p>
+            </div>
+          </div>
+        ) : isPortalEditing ? (
           <div className="space-y-4">
             {/* Portal Active Toggle */}
             <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
@@ -531,7 +544,7 @@ export const Settings: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handlePortalSaveSettings}
-                disabled={isPortalSaving}
+                disabled={isPortalSaving || portalLoading}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-gold-400/20 text-gold-400 border border-gold-400/20 rounded-lg font-bold hover:bg-gold-400/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save size={16} />
@@ -539,7 +552,7 @@ export const Settings: React.FC = () => {
               </button>
               <button
                 onClick={handlePortalCancel}
-                disabled={isPortalSaving}
+                disabled={isPortalSaving || portalLoading}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-400/20 rounded-lg font-bold hover:bg-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <X size={16} />
