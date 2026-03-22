@@ -55,12 +55,10 @@ export const useSettings = () => {
       const { error } = await supabase
         .from('settings')
         .upsert({
-          shop_id: shopId,
           key,
           value,
-          updated_at: new Date().toISOString(),
         }, {
-          onConflict: 'shop_id,key'
+          onConflict: 'key'
         })
 
       if (error) throw error
