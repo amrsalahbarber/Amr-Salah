@@ -165,7 +165,35 @@ export const AdminShops = () => {
       if (shopError) throw shopError
 
       const newShopId = shopData?.[0]?.id
+      
+      // Auto-generate slug from shop name and create portal settings
       if (newShopId) {
+        const generateSlug = (name: string): string => {
+          const randomNum = Math.floor(1000 + Math.random() * 9000)
+          const slug = name
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w-]/g, '')
+            .substring(0, 30)
+          return `${slug}-${randomNum}`
+        }
+
+        // Create portal settings for new shop
+        const { error: portalError } = await supabase.from('portal_settings').insert({
+          shop_id: newShopId,
+          portal_slug: generateSlug(formData.name),
+          is_active: false,
+          template_id: 1,
+          primary_color: '#D4AF37',
+          secondary_color: '#0A0F1E',
+          welcome_message: `أهلاً بك في ${formData.name}`,
+        })
+
+        if (portalError) {
+          console.error('Error creating portal settings:', portalError)
+          toast.error('Shop created but portal settings failed')
+        }
+
         toast.success(`${t('admin.shops.shop_created')} (ID: ${newShopId.substring(0, 8)})`)
       } else {
         toast.success(t('admin.shops.shop_created'))
@@ -222,6 +250,19 @@ export const AdminShops = () => {
         .eq('id', selectedShop.id)
 
       if (error) throw error
+
+      // If shop is being deactivated or suspended, also disable the portal
+      if (editData.subscription_status === 'inactive' || editData.subscription_status === 'suspended') {
+        const { error: portalError } = await supabase
+          .from('portal_settings')
+          .update({ is_active: false })
+          .eq('shop_id', selectedShop.id)
+
+        if (portalError) {
+          console.error('Error updating portal settings:', portalError)
+          // Don't throw - shop was updated successfully, just log the portal error
+        }
+      }
 
       toast.success(t('admin.shops.shop_updated'))
       setShowEditModal(false)
