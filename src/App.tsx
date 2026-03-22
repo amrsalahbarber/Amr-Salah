@@ -27,6 +27,15 @@ import { AdminPlans } from './pages/AdminPlans'
 import { AdminBilling } from './pages/AdminBilling'
 import { ShopBilling } from './pages/ShopBilling'
 
+// Portal Pages
+import { PortalLanding } from './pages/portal/PortalLanding'
+import { PortalLogin } from './pages/portal/PortalLogin'
+import { PortalRegister } from './pages/portal/PortalRegister'
+import { PortalDashboard } from './pages/portal/PortalDashboard'
+import { PortalBookings } from './pages/portal/PortalBookings'
+import { PortalHistory } from './pages/portal/PortalHistory'
+import { PortalProfile } from './pages/portal/PortalProfile'
+
 /**
  * AdminRoute Component
  * 
@@ -312,6 +321,15 @@ function App() {
               </AdminRoute>
             }
           />
+
+          {/* Portal Routes - Public, Slug-based */}
+          <Route path="/shop/:slug" element={<PortalLanding />} />
+          <Route path="/shop/:slug/login" element={<PortalLogin />} />
+          <Route path="/shop/:slug/register" element={<PortalRegister />} />
+          <Route path="/shop/:slug/dashboard" element={<PortalDashboard />} />
+          <Route path="/shop/:slug/bookings" element={<PortalBookings />} />
+          <Route path="/shop/:slug/history" element={<PortalHistory />} />
+          <Route path="/shop/:slug/profile" element={<PortalProfile />} />
 
           {/* Default Route */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
