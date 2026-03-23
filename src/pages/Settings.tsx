@@ -276,8 +276,7 @@ export const Settings: React.FC = () => {
             </div>
           </div>
         ) : isPortalEditing ? (
-          <div className="space-y-4">
-            {/* Portal Active Toggle */}
+          <div className="space-y-4 md:space-y-5 p-3 md:p-4 bg-gray-800/20 rounded-lg">\n            {/* Portal Active Toggle */}
             <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
               <span className="text-gray-300">تفعيل البوابة</span>
               <button
@@ -296,15 +295,15 @@ export const Settings: React.FC = () => {
 
             {/* Template Selector */}
             <div>
-              <label className="block text-sm text-gray-300 mb-2">اختر قالب البوابة</label>
-              <div className="grid grid-cols-5 gap-2">
+              <label className="block text-sm md:text-base text-gray-300 mb-3 font-semibold">اختر قالب البوابة</label>
+              <div className="grid grid-cols-5 gap-2 md:gap-3">
                 {[1, 2, 3, 4, 5].map((tmpl) => (
                   <button
                     key={tmpl}
                     onClick={() => setPortalFormData(prev => ({ ...prev, template_id: tmpl }))}
-                    className={`py-2 px-3 rounded-lg font-bold transition ${
+                    className={`h-12 md:h-10 py-2 md:py-1 px-1 md:px-3 rounded-lg font-bold text-sm md:text-base transition ${
                       portalFormData.template_id === tmpl
-                        ? 'bg-gold-400/30 text-gold-400 border border-gold-400'
+                        ? 'bg-gold-400/30 text-gold-400 border-2 border-gold-400'
                         : 'bg-gray-800 text-gray-400 border border-gray-600 hover:border-gray-500'
                     }`}
                   >
@@ -315,8 +314,8 @@ export const Settings: React.FC = () => {
             </div>
 
             {/* Template Preview */}
-            <div className="border border-gray-600 rounded-lg p-4 overflow-auto">
-              <p className="text-sm text-gray-400 mb-3">معاينة القالب</p>
+            <div className="border border-gray-600 rounded-lg p-3 md:p-4 overflow-auto bg-gray-800/20">
+              <p className="text-base md:text-lg font-semibold text-gold-400 mb-4">معاينة القالب</p>
               
               {/* Template 1: Modern Minimalist */}
               {portalFormData.template_id === 1 && (
@@ -435,30 +434,31 @@ export const Settings: React.FC = () => {
 
             {/* Portal Slug */}
             <div>
-              <label className="block text-sm text-gray-300 mb-2">معرّف البوابة (slug)</label>
-              <div className="flex gap-2">
-                <span className="px-3 py-2 bg-gray-800/50 text-gray-400 rounded-lg text-sm">https://yourapp.com/shop/</span>
+              <label className="block text-sm md:text-base text-gray-300 mb-2 font-semibold">معرّف البوابة (slug)</label>
+              <div className="space-y-2 md:flex md:gap-2">
+                <span className="hidden md:block px-3 py-2 bg-gray-800/50 text-gray-400 rounded-lg text-sm whitespace-nowrap">https://yourapp.com/shop/</span>
                 <input
                   type="text"
                   value={portalFormData.portal_slug}
                   onChange={(e) => setPortalFormData(prev => ({ ...prev, portal_slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-gold-400 focus:outline-none text-sm"
+                  className="w-full px-3 py-2 md:flex-1 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-gold-400 focus:outline-none text-sm"
                   placeholder="my-barbershop"
                   dir="ltr"
                 />
               </div>
+              <div className="md:hidden mt-2 text-xs text-gray-500">https://yourapp.com/shop/{portalFormData.portal_slug || 'my-shop'}</div>
             </div>
 
             {/* Color Pickers */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-300 mb-2">اللون الأساسي</label>
+                <label className="block text-sm md:text-base text-gray-300 mb-2 font-semibold">اللون الأساسي</label>
                 <div className="flex gap-2">
                   <input
                     type="color"
                     value={portalFormData.primary_color}
                     onChange={(e) => setPortalFormData(prev => ({ ...prev, primary_color: e.target.value }))}
-                    className="w-12 h-10 rounded-lg cursor-pointer"
+                    className="w-14 h-12 md:w-12 md:h-10 rounded-lg cursor-pointer"
                   />
                   <input
                     type="text"
@@ -471,13 +471,13 @@ export const Settings: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">اللون الثانوي</label>
+                <label className="block text-sm md:text-base text-gray-300 mb-2 font-semibold">اللون الثانوي</label>
                 <div className="flex gap-2">
                   <input
                     type="color"
                     value={portalFormData.secondary_color}
                     onChange={(e) => setPortalFormData(prev => ({ ...prev, secondary_color: e.target.value }))}
-                    className="w-12 h-10 rounded-lg cursor-pointer"
+                    className="w-14 h-12 md:w-12 md:h-10 rounded-lg cursor-pointer"
                   />
                   <input
                     type="text"
@@ -490,13 +490,13 @@ export const Settings: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">لون التركيز</label>
+                <label className="block text-sm md:text-base text-gray-300 mb-2 font-semibold">لون التركيز</label>
                 <div className="flex gap-2">
                   <input
                     type="color"
                     value={portalFormData.accent_color}
                     onChange={(e) => setPortalFormData(prev => ({ ...prev, accent_color: e.target.value }))}
-                    className="w-12 h-10 rounded-lg cursor-pointer"
+                    className="w-14 h-12 md:w-12 md:h-10 rounded-lg cursor-pointer"
                   />
                   <input
                     type="text"
@@ -509,13 +509,13 @@ export const Settings: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">لون النص</label>
+                <label className="block text-sm md:text-base text-gray-300 mb-2 font-semibold">لون النص</label>
                 <div className="flex gap-2">
                   <input
                     type="color"
                     value={portalFormData.text_color}
                     onChange={(e) => setPortalFormData(prev => ({ ...prev, text_color: e.target.value }))}
-                    className="w-12 h-10 rounded-lg cursor-pointer"
+                    className="w-14 h-12 md:w-12 md:h-10 rounded-lg cursor-pointer"
                   />
                   <input
                     type="text"
@@ -541,21 +541,21 @@ export const Settings: React.FC = () => {
             </div>
 
             {/* Save/Cancel Buttons */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t border-gray-600">
               <button
                 onClick={handlePortalSaveSettings}
                 disabled={isPortalSaving || portalLoading}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gold-400/20 text-gold-400 border border-gold-400/20 rounded-lg font-bold hover:bg-gold-400/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-gold-400/20 text-gold-400 border border-gold-400/20 rounded-lg font-bold hover:bg-gold-400/30 transition disabled:opacity-50 disabled:cursor-not-allowed text-base md:text-sm"
               >
-                <Save size={16} />
+                <Save size={18} />
                 {isPortalSaving ? 'جاري الحفظ...' : 'حفظ'}
               </button>
               <button
                 onClick={handlePortalCancel}
                 disabled={isPortalSaving || portalLoading}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-400/20 rounded-lg font-bold hover:bg-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-red-500/20 text-red-400 border border-red-400/20 rounded-lg font-bold hover:bg-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed text-base md:text-sm"
               >
-                <X size={16} />
+                <X size={18} />
                 إلغاء
               </button>
             </div>
