@@ -288,22 +288,26 @@ export const Settings: React.FC = () => {
                   display: 'inline-flex',
                   height: '24px',
                   width: '44px',
-                  alignItems: 'center',
-                  borderRadius: '9999px',
+                  borderRadius: '12px',
                   border: 'none',
                   cursor: 'pointer',
+                  padding: '0',
+                  overflow: 'hidden',
                   backgroundColor: portalFormData.is_active ? '#22c55e' : '#4b5563',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  flexShrink: 0
                 }}
               >
                 <span style={{
-                  display: 'inline-block',
-                  height: '16px',
-                  width: '16px',
-                  borderRadius: '9999px',
+                  position: 'absolute',
+                  top: '3px',
+                  left: portalFormData.is_active ? '23px' : '3px',
+                  height: '18px',
+                  width: '18px',
+                  borderRadius: '50%',
                   backgroundColor: 'white',
-                  transform: portalFormData.is_active ? 'translateX(24px)' : 'translateX(4px)',
-                  transition: 'transform 0.2s'
+                  transition: 'left 0.2s ease',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
                 }} />
               </button>
             </div>
