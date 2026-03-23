@@ -589,9 +589,74 @@ export const Settings: React.FC = () => {
                 style={{ backgroundColor: portalSettings?.primary_color || '#FFD700' }}
               />
             </div>
+            {/* Portal Link - Professional UI */}
             <div>
-              <p className="text-xs text-gray-400">معرّف البوابة</p>
-              <p className="text-sm font-mono text-blue-400">https://yourapp.com/shop/{portalSettings?.portal_slug}</p>
+              <p style={{ textAlign: 'right', marginBottom: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
+                رابط البوابة
+              </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+              }}>
+                <a
+                  href={`${window.location.origin}/shop/${portalSettings?.portal_slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1,
+                    color: '#D4AF37',
+                    fontSize: '13px',
+                    textDecoration: 'none',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    direction: 'ltr',
+                    textAlign: 'left'
+                  }}
+                >
+                  {window.location.origin}/shop/{portalSettings?.portal_slug}
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/shop/${portalSettings?.portal_slug}`)
+                    toast.success('تم نسخ الرابط ✓')
+                  }}
+                  style={{
+                    background: 'rgba(212,175,55,0.15)',
+                    border: '1px solid rgba(212,175,55,0.3)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    color: '#D4AF37',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  📋 نسخ
+                </button>
+                <a
+                  href={`${window.location.origin}/shop/${portalSettings?.portal_slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    background: 'rgba(212,175,55,0.15)',
+                    border: '1px solid rgba(212,175,55,0.3)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    color: '#D4AF37',
+                    textDecoration: 'none',
+                    fontSize: '12px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  🔗 فتح
+                </a>
+              </div>
             </div>
             <div>
               <p className="text-xs text-gray-400">القالب</p>
