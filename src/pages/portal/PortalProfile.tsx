@@ -3,11 +3,25 @@ import { useEffect, useState } from 'react'
 import { usePortalAuthSecure } from '@/hooks/usePortalAuthSecure'
 import { usePortalSettingsWithShop } from '@/hooks/usePortalSettingsWithShop'
 import { ArrowRight, Save } from 'lucide-react'
+import { PortalBottomNav } from './PortalBottomNav'
+import { PortalLanguageToggle } from './PortalLanguageToggle'
 import toast from 'react-hot-toast'
+
+type Language = 'ar' | 'en'
 
 export function PortalProfile() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+
+  // Language state
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem(`portal_lang_${slug}`)
+    return (saved === 'en' ? 'en' : 'ar') as Language
+  })
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang)
+  }
 
   // Auth & Settings
   const { customer, loading: authLoading, updateProfile } = usePortalAuthSecure(slug)
@@ -91,7 +105,8 @@ export function PortalProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-24" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <PortalLanguageToggle currentLanguage={lang} onLanguageChange={handleLanguageChange} />
       <div className="max-w-2xl mx-auto p-8">
         {/* Back Button */}
         <button
@@ -99,13 +114,13 @@ export function PortalProfile() {
           className="flex items-center gap-2 mb-8 text-white/70 hover:text-white transition"
         >
           <ArrowRight size={20} />
-          العودة للرئيسة
+          {lang === 'ar' ? 'العودة للرئيسة' : 'Back to Dashboard'}
         </button>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">بيانات الحساب</h1>
-          <p className="text-white/60">مع {settings?.shop_name}</p>
+          <h1 className="text-4xl font-bold text-white mb-2">{lang === 'ar' ? 'بيانات الحساب' : 'Account Settings'}</h1>
+          <p className="text-white/60">{lang === 'ar' ? 'مع' : 'with'} {settings?.shop_name}</p>
         </div>
 
 
@@ -212,6 +227,8 @@ export function PortalProfile() {
           )}
         </div>
       </div>
+
+      <PortalBottomNav primaryColor={settings?.primary_color || '#FFD700'} />
     </div>
   )
 }

@@ -3,7 +3,9 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { usePortalAuthSecure } from '@/hooks/usePortalAuthSecure'
 import { usePortalSettingsWithShop } from '@/hooks/usePortalSettingsWithShop'
 import { usePortalBookings } from '@/hooks/usePortalBookings'
-import { ArrowRight, X, CheckCircle, Clock, User, Calendar, Globe } from 'lucide-react'
+import { ArrowRight, X, CheckCircle, Clock, User, Calendar } from 'lucide-react'
+import { PortalBottomNav } from './PortalBottomNav'
+import { PortalLanguageToggle } from './PortalLanguageToggle'
 import toast from 'react-hot-toast'
 
 type TabType = 'new' | 'existing'
@@ -280,10 +282,11 @@ export function PortalBookings() {
   const primaryColor = settings?.primary_color || '#FFD700'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir={dir}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-24" dir={dir}>
+      <PortalLanguageToggle currentLanguage={lang} onLanguageChange={handleLanguageChange} />
       <div className="max-w-5xl mx-auto p-8">
-        {/* Top Bar with Language Toggle */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Top Bar with Back Button */}
+        <div className="flex items-center justify-start mb-8">
           <button
             onClick={() => navigate(`/shop/${slug}/dashboard`)}
             className="flex items-center gap-2 text-white/70 hover:text-white transition"
@@ -291,31 +294,6 @@ export function PortalBookings() {
             <ArrowRight size={20} />
             {t.back}
           </button>
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg p-1">
-            <button
-              onClick={() => handleLanguageChange('ar')}
-              className={`px-3 py-2 rounded font-bold transition ${
-                lang === 'ar'
-                  ? 'bg-gold-400 text-black'
-                  : 'text-white/70 hover:text-white'
-              }`}
-              style={lang === 'ar' ? { backgroundColor: primaryColor } : {}}
-            >
-              العربية
-            </button>
-            <button
-              onClick={() => handleLanguageChange('en')}
-              className={`px-3 py-2 rounded font-bold transition flex items-center gap-1 ${
-                lang === 'en'
-                  ? 'bg-gold-400 text-black'
-                  : 'text-white/70 hover:text-white'
-              }`}
-              style={lang === 'en' ? { backgroundColor: primaryColor } : {}}
-            >
-              <Globe size={16} />
-              English
-            </button>
-          </div>
         </div>
 
         {/* Header */}
@@ -605,6 +583,8 @@ export function PortalBookings() {
           </div>
         )}
       </div>
+
+      <PortalBottomNav primaryColor={primaryColor} />
     </div>
   )
 }

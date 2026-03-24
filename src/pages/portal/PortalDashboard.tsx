@@ -4,11 +4,25 @@ import { usePortalAuthSecure } from '@/hooks/usePortalAuthSecure'
 import { usePortalSettingsWithShop } from '@/hooks/usePortalSettingsWithShop'
 import { usePortalDashboardStats } from '@/hooks/usePortalDashboardStats'
 import { LogOut, Calendar, TrendingUp, Clock } from 'lucide-react'
+import { PortalBottomNav } from './PortalBottomNav'
+import { PortalLanguageToggle } from './PortalLanguageToggle'
 import toast from 'react-hot-toast'
+
+type Language = 'ar' | 'en'
 
 export function PortalDashboard() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+
+  // Language state
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem(`portal_lang_${slug}`)
+    return (saved === 'en' ? 'en' : 'ar') as Language
+  })
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang)
+  }
 
   // Auth & Settings - use lazy initialization with localStorage
   const { customer, loading: authLoading, logoutPortalUser } = usePortalAuthSecure(slug)
@@ -63,7 +77,8 @@ export function PortalDashboard() {
   const primaryColor = settings?.primary_color || '#FFD700'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-24" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <PortalLanguageToggle currentLanguage={lang} onLanguageChange={handleLanguageChange} />
       <div className="max-w-5xl mx-auto p-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
@@ -205,6 +220,8 @@ export function PortalDashboard() {
           <p className="text-white/70 mb-6">{settings?.welcome_message || 'نسعد بخدمتك'}</p>
         </div>
       </div>
+
+      <PortalBottomNav primaryColor={primaryColor} />
     </div>
   )
 }
