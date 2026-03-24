@@ -286,6 +286,14 @@
     "completed": "مكتمل",
     "cancelled": "ملغى"
   },
+  "portal": {
+    "nav": {
+      "home": "الرئيسية",
+      "bookings": "المواعيد",
+      "history": "السجل",
+      "profile": "البيانات"
+    }
+  },
   "receipt": {
     "title": "الإيصال",
     "barbershop": "محل الحلاقة",

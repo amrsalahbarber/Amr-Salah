@@ -69,17 +69,20 @@ export function usePortalDashboardStats(shopId?: string, customerId?: string, sl
       const totalSpent = visitLogs?.reduce((sum, v) => sum + (v.totalSpent || 0), 0) || clientData.totalSpent || 0
       const lastVisit = visitLogs && visitLogs.length > 0 ? visitLogs[0]?.visitDate : undefined
 
-      // Step 4: Get next upcoming booking
-      const now = new Date().toISOString()
+      // Step 4: Get next upcoming booking using correct column name and date filtering
+      const now = new Date()
+      const dateStart = now.toISOString().split('T')[0] + 'T00:00:00'
+      const dateEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T23:59:59'
+
       const { data: nextBookings, error: bookingErr } = await supabase
         .from('bookings')
-        .select('id, bookingDate, bookingTime, serviceId')
+        .select('id, bookingtime, serviceid')
         .eq('shop_id', shopId)
-        .eq('clientPhone', customerPhone)
+        .eq('clientphone', customerPhone)
         .in('status', ['pending', 'confirmed'])
-        .gte('bookingDate', now)
-        .order('bookingDate', { ascending: true })
-        .order('bookingTime', { ascending: true })
+        .gte('bookingtime', dateStart)
+        .lte('bookingtime', dateEnd)
+        .order('bookingtime', { ascending: true })
         .limit(1)
 
       if (bookingErr) throw bookingErr
@@ -89,9 +92,10 @@ export function usePortalDashboardStats(shopId?: string, customerId?: string, sl
         .from('bookings')
         .select('id', { count: 'exact', head: true })
         .eq('shop_id', shopId)
-        .eq('clientPhone', customerPhone)
+        .eq('clientphone', customerPhone)
         .in('status', ['pending', 'confirmed'])
-        .gte('bookingDate', now)
+        .gte('bookingtime', dateStart)
+        .lte('bookingtime', dateEnd)
 
       if (countErr) throw countErr
 
@@ -101,7 +105,7 @@ export function usePortalDashboardStats(shopId?: string, customerId?: string, sl
         const { data: serviceData } = await supabase
           .from('services')
           .select('nameAr')
-          .eq('id', nextBookings[0].serviceId)
+          .eq('id', nextBookings[0].serviceid)
           .single()
         serviceName = serviceData?.nameAr || 'خدمة'
       }
@@ -109,8 +113,8 @@ export function usePortalDashboardStats(shopId?: string, customerId?: string, sl
       const nextBooking = nextBookings && nextBookings.length > 0 
         ? {
             id: nextBookings[0].id,
-            bookingDate: nextBookings[0].bookingDate,
-            bookingTime: nextBookings[0].bookingTime,
+            bookingDate: new Date(nextBookings[0].bookingtime).toISOString().split('T')[0],
+            bookingTime: new Date(nextBookings[0].bookingtime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
             serviceName
           }
         : undefined

@@ -1,21 +1,63 @@
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { Home, Calendar, History, User } from 'lucide-react'
 
 interface PortalBottomNavProps {
   primaryColor?: string
 }
 
-const navItems = [
-  { key: 'dashboard', label: 'الرئيسية', path: 'dashboard', icon: Home },
-  { key: 'bookings', label: 'المواعيد', path: 'bookings', icon: Calendar },
-  { key: 'history', label: 'السجل', path: 'history', icon: History },
-  { key: 'profile', label: 'البيانات', path: 'profile', icon: User }
-]
+type Language = 'ar' | 'en'
+
+const translations = {
+  ar: {
+    home: 'الرئيسية',
+    bookings: 'المواعيد',
+    history: 'السجل',
+    profile: 'البيانات'
+  },
+  en: {
+    home: 'Home',
+    bookings: 'Bookings',
+    history: 'History',
+    profile: 'Profile'
+  }
+}
 
 export function PortalBottomNav({ primaryColor = '#D4AF37' }: PortalBottomNavProps) {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Language state - Listen for changes in localStorage
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem(`portal_lang_${slug}`)
+    return (saved === 'en' ? 'en' : 'ar') as Language
+  })
+
+  // Listen for language changes from toggle button or other pages
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem(`portal_lang_${slug}`)
+      const newLang = (saved === 'en' ? 'en' : 'ar') as Language
+      setLang(newLang)
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('languageChange', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('languageChange', handleStorageChange)
+    }
+  }, [slug])
+
+  const t = translations[lang]
+  const navItems = [
+    { key: 'dashboard', label: t.home, path: 'dashboard', icon: Home },
+    { key: 'bookings', label: t.bookings, path: 'bookings', icon: Calendar },
+    { key: 'history', label: t.history, path: 'history', icon: History },
+    { key: 'profile', label: t.profile, path: 'profile', icon: User }
+  ]
 
   // Get current page from pathname
   const currentPage = location.pathname.split('/').pop() || 'dashboard'
