@@ -218,8 +218,7 @@ export function usePortalBookings(shopId?: string, customerId?: string) {
       serviceId: string,
       bookingDate: string,
       bookingTime: string,
-      barberId?: string,
-      clientId?: string
+      barberId?: string
     ) => {
       if (!customerId || !shopId) {
         setError('خطأ في البيانات')

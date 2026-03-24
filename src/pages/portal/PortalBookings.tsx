@@ -217,8 +217,7 @@ export function PortalBookings() {
         form.serviceId,
         form.date,
         form.time,
-        form.barberId || undefined,
-        customer?.id
+        form.barberId || undefined
       )
 
       // Show confirmation
