@@ -38,8 +38,12 @@ export function PortalLoginSecure() {
 
   // If already logged in, redirect to dashboard
   useEffect(() => {
-    if (!authLoading && customer) {
-      console.log('✅ Customer logged in, redirecting to dashboard')
+    if (!authLoading && customer && slug) {
+      console.log('✅ Customer logged in, redirecting:', {
+        customerId: customer.id,
+        slug,
+        destination: `/shop/${slug}/dashboard`
+      })
       navigate(`/shop/${slug}/dashboard`, { replace: true })
     }
   }, [customer, authLoading, slug, navigate])
@@ -69,13 +73,17 @@ export function PortalLoginSecure() {
         return
       }
 
+      console.log('📱 Attempting login with phone:', phone)
+      
       const result = await loginPortalUser(phone, password)
+      
       if (result) {
+        console.log('✅ Login successful, customer state updated')
         toast.success('تم تسجيل الدخول بنجاح ✓')
-        // Redirect immediately instead of waiting for state update
-        setTimeout(() => {
-          navigate(`/shop/${slug}/dashboard`, { replace: true })
-        }, 500)
+        // Don't manually navigate - let useEffect handle it when customer state updates
+      } else {
+        console.error('❌ Login returned null/falsy')
+        toast.error('فشل تسجيل الدخول')
       }
     } catch (err: any) {
       console.error('Login error:', err)

@@ -154,7 +154,7 @@ export function usePortalAuthSecure(slug?: string) {
         // Step 1: Lookup email using phone from portal_users
         const { data: portalUser, error: lookupErr } = await supabase
           .from('portal_users')
-          .select('id, email, phone, name')
+          .select('id, email, phone, name, shop_id')
           .eq('phone', phone)
           .maybeSingle()
 
@@ -183,11 +183,21 @@ export function usePortalAuthSecure(slug?: string) {
 
         if (!data.user) throw new Error('فشل تسجيل الدخول')
 
-        console.log('✅ User signed in. Loading portal user data')
+        console.log('✅ User signed in. Auth UID:', data.user.id)
 
-        // Step 3: Load portal user data
-        const portalUserData = await loadPortalUser(data.user.id)
-        return portalUserData
+        // Step 3: Set customer data directly (don't wait for DB read)
+        const customerData: PortalCustomer = {
+          id: data.user.id,
+          shop_id: portalUser.shop_id,
+          phone: portalUser.phone,
+          name: portalUser.name,
+          email: portalUser.email
+        }
+
+        setCustomer(customerData)
+        console.log('✅ Customer state updated:', customerData)
+        
+        return customerData
       } catch (err: any) {
         const message = err.message || 'خطأ في تسجيل الدخول'
         console.error('❌ Login error:', message)
@@ -197,7 +207,7 @@ export function usePortalAuthSecure(slug?: string) {
         setLoading(false)
       }
     },
-    [loadPortalUser]
+    []
   )
 
   // Logout
