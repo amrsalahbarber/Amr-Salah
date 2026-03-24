@@ -83,15 +83,20 @@ export function usePortalAuthSecure(slug?: string) {
         setLoading(true)
         setError(null)
 
-        // 1. Create Supabase auth user (using phone as email)
+        // ⭐ Use real email if provided, otherwise use phone-based email
+        const authEmail = email?.trim() || `${phone}@portal.local`
+
+        console.log('📧 Registering with email:', authEmail)
+
+        // 1. Create Supabase auth user
         const { data: authData, error: authErr } = await supabase.auth.signUp({
-          email: `${phone}@portal.local`, // Email format from phone
+          email: authEmail, // Use real email or fallback to phone@portal.local
           password,
           options: {
             data: {
               phone,
               name,
-              email
+              email: authEmail // Store the actual email used
             }
           }
         })
@@ -107,7 +112,7 @@ export function usePortalAuthSecure(slug?: string) {
           shop_id: shopId || slug?.split('-')[0], // Extract shop ID from slug or use provided
           phone,
           name: name || null,
-          email: email || null
+          email: authEmail // Store the email used for authentication
         }
 
         const { data: portalUser, error: portalErr } = await supabase

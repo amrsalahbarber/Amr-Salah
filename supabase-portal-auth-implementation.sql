@@ -32,6 +32,17 @@ DROP POLICY IF EXISTS "portal_users_admin_manage" ON portal_users;
 DROP POLICY IF EXISTS "portal_users_create_own_shop" ON portal_users;
 DROP POLICY IF EXISTS "portal_users_read_own_shop" ON portal_users;
 DROP POLICY IF EXISTS "portal_users_update_own_shop" ON portal_users;
+DROP POLICY IF EXISTS "portal_users_create_self" ON portal_users;
+
+-- ⭐ ALLOW NEW USERS TO CREATE THEIR OWN RECORD (during registration)
+-- No auth_user_id check - they're not logged in yet!
+CREATE POLICY "portal_users_create_self" ON portal_users
+  FOR INSERT
+  WITH CHECK (
+    -- Allow insertion if the phone is being registered for ANY valid shop
+    -- The phone must be unique, so this ensures one portal user per phone
+    id = auth.uid()
+  );
 
 -- Portal users can view their own data
 CREATE POLICY "portal_users_read_own" ON portal_users
@@ -68,12 +79,16 @@ CREATE POLICY "portal_users_update_own_shop" ON portal_users
       SELECT id FROM shops WHERE auth_user_id = auth.uid()
     )
     OR
+    id = auth.uid()
+    OR
     EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
   )
   WITH CHECK (
     shop_id = (
       SELECT id FROM shops WHERE auth_user_id = auth.uid()
     )
+    OR
+    id = auth.uid()
     OR
     EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
   );
