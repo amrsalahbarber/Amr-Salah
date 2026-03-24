@@ -26,15 +26,65 @@ CREATE INDEX IF NOT EXISTS idx_portal_users_phone ON portal_users(phone);
 -- ============================================================================
 ALTER TABLE portal_users ENABLE ROW LEVEL SECURITY;
 
--- Only users can view their own data
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "portal_users_read_own" ON portal_users;
+DROP POLICY IF EXISTS "portal_users_admin_manage" ON portal_users;
+DROP POLICY IF EXISTS "portal_users_create_own_shop" ON portal_users;
+DROP POLICY IF EXISTS "portal_users_read_own_shop" ON portal_users;
+DROP POLICY IF EXISTS "portal_users_update_own_shop" ON portal_users;
+
+-- Portal users can view their own data
 CREATE POLICY "portal_users_read_own" ON portal_users
   FOR SELECT
   USING (id = auth.uid());
 
--- Admin can manage portal users
+-- Shop owners can create new portal users (customers) for their shop
+CREATE POLICY "portal_users_create_own_shop" ON portal_users
+  FOR INSERT
+  WITH CHECK (
+    shop_id = (
+      SELECT id FROM shops WHERE auth_user_id = auth.uid()
+    )
+  );
+
+-- Shop owners can read/view portal users from their shop
+CREATE POLICY "portal_users_read_own_shop" ON portal_users
+  FOR SELECT
+  USING (
+    shop_id = (
+      SELECT id FROM shops WHERE auth_user_id = auth.uid()
+    )
+    OR
+    id = auth.uid()
+    OR
+    EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
+  );
+
+-- Shop owners can update portal users from their shop
+CREATE POLICY "portal_users_update_own_shop" ON portal_users
+  FOR UPDATE
+  USING (
+    shop_id = (
+      SELECT id FROM shops WHERE auth_user_id = auth.uid()
+    )
+    OR
+    EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
+  )
+  WITH CHECK (
+    shop_id = (
+      SELECT id FROM shops WHERE auth_user_id = auth.uid()
+    )
+    OR
+    EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
+  );
+
+-- Admin can manage all portal users
 CREATE POLICY "portal_users_admin_manage" ON portal_users
   FOR ALL
   USING (
+    EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
+  )
+  WITH CHECK (
     EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
   );
 
@@ -46,6 +96,10 @@ ALTER TABLE services DISABLE ROW LEVEL SECURITY;
 -- Step 4: Enable NEW RLS policies on barbers
 -- ============================================================================
 ALTER TABLE barbers ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "barbers_read_by_portal_users" ON barbers;
+DROP POLICY IF EXISTS "barbers_manage_own_shop" ON barbers;
 
 -- Portal users can read ONLY barbers from their shop
 CREATE POLICY "barbers_read_by_portal_users" ON barbers
@@ -76,6 +130,10 @@ CREATE POLICY "barbers_manage_own_shop" ON barbers
 -- Step 5: Enable NEW RLS policies on services
 -- ============================================================================
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "services_read_by_portal_users" ON services;
+DROP POLICY IF EXISTS "services_manage_own_shop" ON services;
 
 -- Portal users can read ONLY services from their shop
 CREATE POLICY "services_read_by_portal_users" ON services
@@ -109,6 +167,11 @@ CREATE POLICY "services_manage_own_shop" ON services
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(20);
 
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "bookings_read_own" ON bookings;
+DROP POLICY IF EXISTS "bookings_create_portal" ON bookings;
+DROP POLICY IF EXISTS "bookings_update_own" ON bookings;
 
 -- Portal users can read their own bookings
 CREATE POLICY "bookings_read_own" ON bookings
@@ -158,6 +221,9 @@ CREATE POLICY "bookings_update_own" ON bookings
 -- Step 7: Enable RLS on portal_settings (if not already)
 -- ============================================================================
 ALTER TABLE portal_settings ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "settings_read_by_portal_users" ON portal_settings;
 
 -- Portal users can read settings for their shop only
 CREATE POLICY "settings_read_by_portal_users" ON portal_settings

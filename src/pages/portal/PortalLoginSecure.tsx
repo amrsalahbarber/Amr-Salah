@@ -33,6 +33,7 @@ export function PortalLoginSecure() {
   const [forgotPhone, setForgotPhone] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
 
   // If already logged in, redirect to dashboard
@@ -74,7 +75,19 @@ export function PortalLoginSecure() {
       }
     } catch (err: any) {
       console.error('Login error:', err)
-      toast.error(err.message || 'خطأ في تسجيل الدخول')
+      
+      // Enhanced error messages
+      let errorMsg = 'خطأ في تسجيل الدخول'
+      
+      if (err.message?.includes('not found') || err.message?.includes('نتيجة للبحث')) {
+        errorMsg = '❌ رقم الهاتف غير مسجل. يرجى التسجيل أولاً'
+      } else if (err.message?.includes('Invalid password') || err.message?.includes('password')) {
+        errorMsg = '❌ كلمة المرور غير صحيحة'
+      } else if (err.message) {
+        errorMsg = `❌ ${err.message}`
+      }
+      
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -125,7 +138,21 @@ export function PortalLoginSecure() {
       }
     } catch (err: any) {
       console.error('Registration error:', err)
-      toast.error(err.message || 'خطأ في التسجيل')
+      
+      // Enhanced error messages
+      let errorMsg = 'خطأ في التسجيل'
+      
+      if (err.message?.includes('User already registered') || err.message?.includes('already exists')) {
+        errorMsg = '❌ رقم الهاتف مسجل بالفعل. حاول تسجيل الدخول أو استخدم رقم آخر'
+      } else if (err.message?.includes('invalid email')) {
+        errorMsg = '❌ البريد الإلكتروني غير صحيح'
+      } else if (err.message?.includes('password')) {
+        errorMsg = '❌ كلمة المرور ضعيفة. استخدم 6 أحرف على الأقل'
+      } else if (err.message) {
+        errorMsg = `❌ ${err.message}`
+      }
+      
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -162,7 +189,21 @@ export function PortalLoginSecure() {
       }
     } catch (err: any) {
       console.error('Reset error:', err)
-      toast.error(err.message || 'خطأ في إعادة التعيين')
+      
+      // Enhanced error messages
+      let errorMsg = 'خطأ في إعادة تعيين كلمة المرور'
+      
+      if (err.message?.includes('not found') || err.message?.includes('doesn\'t exist')) {
+        errorMsg = '❌ رقم الهاتف غير مسجل في النظام'
+      } else if (err.message?.includes('does not match')) {
+        errorMsg = '❌ البريد الإلكتروني لا يتطابق مع البيانات المسجلة'
+      } else if (err.message?.includes('password')) {
+        errorMsg = '❌ كلمة المرور ضعيفة. استخدم 6 أحرف على الأقل'
+      } else if (err.message) {
+        errorMsg = `❌ ${err.message}`
+      }
+      
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -406,15 +447,25 @@ export function PortalLoginSecure() {
                 <label className="block text-sm font-semibold text-slate-200">
                   تأكيد كلمة المرور
                 </label>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-800/60 border border-slate-700/50 hover:border-cyan-500/30 focus:border-cyan-500/60 rounded-lg text-white placeholder-slate-500 focus:outline-none transition duration-200 focus:ring-1 focus:ring-cyan-500/20"
-                  placeholder="••••••••"
-                  required
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <input
+                    type={showPasswordConfirm ? 'text' : 'password'}
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-800/60 border border-slate-700/50 hover:border-cyan-500/30 focus:border-cyan-500/60 rounded-lg text-white placeholder-slate-500 focus:outline-none transition duration-200 focus:ring-1 focus:ring-cyan-500/20"
+                    placeholder="••••••••"
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                    className="absolute left-4 top-3.5 text-slate-400 hover:text-cyan-400 transition duration-200"
+                    disabled={loading}
+                  >
+                    {showPasswordConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {/* Register Button */}
