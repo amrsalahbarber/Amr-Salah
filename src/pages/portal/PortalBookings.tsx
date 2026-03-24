@@ -60,6 +60,7 @@ const translations = {
     no: 'لا',
     selectFirstDate: 'اختر التاريخ أولاً',
     pleaseSelect: 'الرجاء اختيار جميع البيانات المطلوبة',
+    noServices: 'لا توجد خدمات متاحة',
     bookingFailed: 'الحجز فشل'
   },
   en: {
@@ -98,6 +99,7 @@ const translations = {
     no: 'No',
     selectFirstDate: 'Select a date first',
     pleaseSelect: 'Please select all required fields',
+    noServices: 'No services available',
     bookingFailed: 'Booking failed'
   }
 }
@@ -376,124 +378,134 @@ export function PortalBookings() {
 
         {/* Tab Content */}
         {activeTab === 'new' && (
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Form */}
-            <div className="space-y-6">
-              <div>
-                <label className="block text-white/70 text-sm font-bold mb-2">{t.service} *</label>
-                <select
-                  value={form.serviceId}
-                  onChange={(e) => setForm({ ...form, serviceId: e.target.value, time: '' })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
-                    placeholder:text-white/40 focus:outline-none focus:border-white/30 transition"
-                >
-                  <option value="">{t.selectService}</option>
-                  {services.map(service => (
-                    <option key={service.id} value={service.id}>
-                      {lang === 'ar' ? service.nameAr : service.nameEn} - {service.price} ج.م ({service.durationMinutes} {lang === 'ar' ? 'دقيقة' : 'mins'})
-                    </option>
-                  ))}
-                </select>
+          <>
+            {services.length === 0 ? (
+              <div className="bg-white/5 border border-white/10 rounded-lg p-12 text-center">
+                <div className="text-5xl mb-4">📋</div>
+                <h3 className="text-xl font-bold text-white/70 mb-2">{t.noServices}</h3>
+                <p className="text-white/50">{lang === 'ar' ? 'يرجى التواصل مع المتجر' : 'Please contact the shop'}</p>
               </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Form */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-white/70 text-sm font-bold mb-2">{t.service} *</label>
+                    <select
+                      value={form.serviceId}
+                      onChange={(e) => setForm({ ...form, serviceId: e.target.value, time: '' })}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
+                        placeholder:text-white/40 focus:outline-none focus:border-white/30 transition"
+                    >
+                      <option value="">{t.selectService}</option>
+                      {services.map(service => (
+                        <option key={service.id} value={service.id}>
+                          {lang === 'ar' ? service.nameAr : service.nameEn} - {service.price} ج.م ({service.durationMinutes} {lang === 'ar' ? 'دقيقة' : 'mins'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div>
-                <label className="block text-white/70 text-sm font-bold mb-2">{t.barber} ({t.optional})</label>
-                <select
-                  value={form.barberId || ''}
-                  onChange={(e) => setForm({ ...form, barberId: e.target.value || null, time: '' })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
-                    placeholder:text-white/40 focus:outline-none focus:border-white/30 transition"
-                >
-                  <option value="">{t.anyBarber}</option>
-                  {barbers.map(barber => (
-                    <option key={barber.id} value={barber.id}>
-                      {barber.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div>
+                    <label className="block text-white/70 text-sm font-bold mb-2">{t.barber} ({t.optional})</label>
+                    <select
+                      value={form.barberId || ''}
+                      onChange={(e) => setForm({ ...form, barberId: e.target.value || null, time: '' })}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
+                        placeholder:text-white/40 focus:outline-none focus:border-white/30 transition"
+                    >
+                      <option value="">{t.anyBarber}</option>
+                      {barbers.map(barber => (
+                        <option key={barber.id} value={barber.id}>
+                          {barber.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div>
-                <label className="block text-white/70 text-sm font-bold mb-2">{t.date} *</label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value, time: '' })}
-                  min={getMinDate()}
-                  max={getMaxDate()}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
-                    placeholder:text-white/40 focus:outline-none focus:border-white/30 transition"
-                />
-                <p className="text-white/40 text-xs mt-2">{t.fromTomorrow}</p>
-              </div>
+                  <div>
+                    <label className="block text-white/70 text-sm font-bold mb-2">{t.date} *</label>
+                    <input
+                      type="date"
+                      value={form.date}
+                      onChange={(e) => setForm({ ...form, date: e.target.value, time: '' })}
+                      min={getMinDate()}
+                      max={getMaxDate()}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
+                        placeholder:text-white/40 focus:outline-none focus:border-white/30 transition"
+                    />
+                    <p className="text-white/40 text-xs mt-2">{t.fromTomorrow}</p>
+                  </div>
 
-              <div>
-                <label className="block text-white/70 text-sm font-bold mb-2">{t.time} *</label>
-                <select
-                  value={form.time}
-                  onChange={(e) => setForm({ ...form, time: e.target.value })}
-                  disabled={!form.date || !form.serviceId}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
-                    placeholder:text-white/40 focus:outline-none focus:border-white/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">{t.selectTime}</option>
-                  {availableSlots.map(slot => (
-                    <option key={slot} value={slot}>
-                      {slot}
-                    </option>
-                  ))}
-                </select>
-                {!form.date && (
-                  <p className="text-white/40 text-xs mt-2">{t.selectFirstDate}</p>
-                )}
-                {form.date && availableSlots.length === 0 && (
-                  <p className="text-yellow-400/70 text-xs mt-2">{t.noSlots}</p>
-                )}
-              </div>
+                  <div>
+                    <label className="block text-white/70 text-sm font-bold mb-2">{t.time} *</label>
+                    <select
+                      value={form.time}
+                      onChange={(e) => setForm({ ...form, time: e.target.value })}
+                      disabled={!form.date || !form.serviceId}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
+                        placeholder:text-white/40 focus:outline-none focus:border-white/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">{t.selectTime}</option>
+                      {availableSlots.map(slot => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+                    {!form.date && (
+                      <p className="text-white/40 text-xs mt-2">{t.selectFirstDate}</p>
+                    )}
+                    {form.date && availableSlots.length === 0 && (
+                      <p className="text-yellow-400/70 text-xs mt-2">{t.noSlots}</p>
+                    )}
+                  </div>
 
-              <button
-                onClick={handleBooking}
-                disabled={submitting || !form.serviceId || !form.date || !form.time}
-                className="w-full py-3 px-4 rounded-lg font-bold text-black transition disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ 
-                  backgroundColor: primaryColor,
-                  opacity: submitting || !form.serviceId || !form.date || !form.time ? 0.5 : 1
-                }}
-              >
-                {submitting ? t.confirming : t.confirmBooking}
-              </button>
-            </div>
-
-            {/* Time Slots Preview */}
-            {form.date && form.serviceId && (
-              <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                  <Clock size={20} />
-                  {t.availableSlots} - {new Date(form.date).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {availableSlots.length > 0 ? (
-                    availableSlots.map(slot => (
-                      <button
-                        key={slot}
-                        onClick={() => setForm({ ...form, time: slot })}
-                        className={`py-2 px-3 rounded-lg text-sm font-bold transition ${
-                          form.time === slot
-                            ? 'bg-gold-400 text-black'
-                            : 'bg-white/10 text-white hover:bg-white/20'
-                        }`}
-                        style={form.time === slot ? { backgroundColor: primaryColor, color: 'black' } : {}}
-                      >
-                        {slot}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-white/50 col-span-2 text-center py-8">{t.noSlots}</p>
-                  )}
+                  <button
+                    onClick={handleBooking}
+                    disabled={submitting || !form.serviceId || !form.date || !form.time}
+                    className="w-full py-3 px-4 rounded-lg font-bold text-black transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ 
+                      backgroundColor: primaryColor,
+                      opacity: submitting || !form.serviceId || !form.date || !form.time ? 0.5 : 1
+                    }}
+                  >
+                    {submitting ? t.confirming : t.confirmBooking}
+                  </button>
                 </div>
+
+                {/* Time Slots Preview */}
+                {form.date && form.serviceId && (
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+                    <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                      <Clock size={20} />
+                      {t.availableSlots} - {new Date(form.date).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {availableSlots.length > 0 ? (
+                        availableSlots.map(slot => (
+                          <button
+                            key={slot}
+                            onClick={() => setForm({ ...form, time: slot })}
+                            className={`py-2 px-3 rounded-lg text-sm font-bold transition ${
+                              form.time === slot
+                                ? 'bg-gold-400 text-black'
+                                : 'bg-white/10 text-white hover:bg-white/20'
+                            }`}
+                            style={form.time === slot ? { backgroundColor: primaryColor, color: 'black' } : {}}
+                          >
+                            {slot}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-white/50 col-span-2 text-center py-8">{t.noSlots}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
         )}
 
         {/* Existing Bookings Tab */}

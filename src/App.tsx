@@ -5,7 +5,6 @@ import { useTheme } from './hooks/useTheme'
 import { useLanguage } from './hooks/useLanguage'
 import { useAuth } from './hooks/useAuth'
 import { checkSubscriptionStatus } from './utils/subscriptionChecker'
-import { seedSampleData } from './utils/seedData'
 
 // Pages
 import Login from './pages/Login'
@@ -133,11 +132,6 @@ function ShopRoute({ children }: { children: React.ReactNode }) {
 function App() {
   const { theme } = useTheme()
   const { language } = useLanguage()
-
-  // Initialize sample data on first load
-  useEffect(() => {
-    seedSampleData()
-  }, [])
 
   // Update document attributes for theme and language
   useEffect(() => {
