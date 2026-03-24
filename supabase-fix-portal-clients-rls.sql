@@ -7,25 +7,19 @@
 -- Solution: Add policies allowing portal users to:
 -- 1. INSERT their own client record during registration
 -- 2. READ clients table for duplicate phone check
+--
+-- Actual Column Names (case-sensitive, must be quoted):
+-- id, name, phone, birthday, notes, "totalVisits", "totalSpent", "isVIP", 
+-- "lastVisit", "createdAt", "updatedAt", shop_id
 -- ============================================================================
 
--- FIRST: Check the exact column names in the clients table
+-- Step 1: Drop existing policies if they exist
 -- ============================================================================
--- Run this to see all columns and their actual names (case-sensitive)
-SELECT 
-  column_name,
-  data_type,
-  is_nullable,
-  column_default
-FROM information_schema.columns
-WHERE table_name = 'clients'
-ORDER BY ordinal_position;
-
--- Drop existing portal user client policies if they exist
 DROP POLICY IF EXISTS "portal_users_insert_own_client" ON clients;
 DROP POLICY IF EXISTS "portal_users_read_clients_for_portal" ON clients;
 
--- Allow portal users to INSERT their own client record
+-- Step 2: Allow portal users to INSERT their own client record
+-- ============================================================================
 -- This specifically allows auth.uid() to insert a client with their phone number
 CREATE POLICY "portal_users_insert_own_client" ON clients
 FOR INSERT TO authenticated
@@ -45,7 +39,8 @@ WITH CHECK (
   )
 );
 
--- Allow portal users to READ clients in their shop
+-- Step 3: Allow portal users to READ clients in their shop
+-- ============================================================================
 -- Needed for duplicate check during registration and to view clients in their shop
 CREATE POLICY "portal_users_read_clients_for_portal" ON clients
 FOR SELECT TO authenticated
@@ -60,7 +55,7 @@ USING (
   OR EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid())
 );
 
--- Step 2: Backfill - Create client records for existing portal_users who don't have one
+-- Step 4: Backfill - Create client records for existing portal_users who don't have one
 -- ============================================================================
 -- This inserts a client record for each portal_user that doesn't already have a matching phone
 INSERT INTO clients (
@@ -92,28 +87,24 @@ WHERE NOT EXISTS (
 )
 ON CONFLICT (phone) DO NOTHING;
 
--- Step 3: Verify backfill worked
+-- Step 5: Verify backfill worked - Count results
 -- ============================================================================
--- Count results of backfill
 SELECT 
-  'Backfill Summary:' as message,
-  COUNT(DISTINCT pu.shop_id) as shops_processed,
-  COUNT(DISTINCT pu.phone) as portal_users_processed,
-  COUNT(c.id) as new_clients_created,
-  COUNT(DISTINCT c.shop_id) as shops_with_clients
+  COUNT(DISTINCT pu.shop_id) as shops_with_portal_users,
+  COUNT(DISTINCT pu.phone) as total_portal_users,
+  COUNT(DISTINCT c.id) as total_clients
 FROM portal_users pu
-LEFT JOIN clients c ON c.phone = pu.phone AND c.shop_id = pu.shop_id AND c.notes LIKE '%البوابة الإلكترونية%';
+LEFT JOIN clients c ON c.phone = pu.phone AND c.shop_id = pu.shop_id;
 
--- Step 4: Log details of created clients
+-- Step 6: Show newly created clients from portal users
 -- ============================================================================
 SELECT 
-  pu.phone,
-  pu.name as portal_user_name,
-  c.name as client_name,
+  c.phone,
+  c.name,
   c.shop_id,
-  c.createdAt,
-  'Created during backfill' as status
-FROM portal_users pu
-LEFT JOIN clients c ON c.phone = pu.phone AND c.shop_id = pu.shop_id
-WHERE c.id IS NOT NULL
-ORDER BY pu.created_at DESC;
+  c.notes,
+  c."createdAt"
+FROM clients c
+WHERE c.notes = 'مسجل عبر البوابة الإلكترونية'
+ORDER BY c."createdAt" DESC
+LIMIT 20;
