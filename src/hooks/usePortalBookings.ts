@@ -266,11 +266,12 @@ export function usePortalBookings(shopId?: string, customerId?: string) {
           clientPhone = clientData.phone
           clientName = clientData.name
         } else {
-          // Fetch client details by ID
+          // Fetch client details by ID + shop_id (required for RLS policy)
           const { data: clientData, error: clientErr } = await supabase
             .from('clients')
             .select('phone, name')
             .eq('id', actualClientId)
+            .eq('shop_id', shopId)
             .single()
 
           if (clientErr || !clientData) {
