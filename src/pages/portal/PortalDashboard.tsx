@@ -9,6 +9,65 @@ import toast from 'react-hot-toast'
 
 type Language = 'ar' | 'en'
 
+const translations = {
+  ar: {
+    myAccount: 'حسابي',
+    logoutSuccess: 'تم تسجيل الخروج بنجاح',
+    logoutError: 'خطأ في تسجيل الخروج',
+    loading: 'جاري التحميل...',
+    welcome: 'مرحباً',
+    totalVisits: 'إجمالي الزيارات',
+    noVisitsYet: 'لا توجد زيارات بعد',
+    totalSpent: 'إجمالي الإنفاق',
+    average: 'متوسط',
+    upcomingAppointments: 'المواعيد القادمة',
+    pendingAppointments: 'مواعيد معلقة',
+    bookAppointment: 'احجز موعد',
+    new: 'جديد',
+    clickToBookNow: 'اضغط للحجز الآن',
+    yourNextAppointment: 'موعدك القادم',
+    date: 'التاريخ',
+    time: 'الوقت',
+    service: 'الخدمة',
+    history: 'السجل',
+    yourPreviousAppointments: 'مواعيدك السابقة',
+    profile: 'البيانات',
+    yourPersonalInfo: 'معلوماتك الشخصية',
+    welcomeTo: 'مرحباً بك في',
+    delightedToServe: 'نسعد بخدمتك',
+    loggingOut: 'جاري...',
+    logout: 'خروج'
+  },
+  en: {
+    myAccount: 'My Account',
+    logoutSuccess: 'Logged out successfully',
+    logoutError: 'Error logging out',
+    loading: 'Loading...',
+    welcome: 'Welcome',
+    totalVisits: 'Total Visits',
+    noVisitsYet: 'No visits yet',
+    totalSpent: 'Total Spent',
+    average: 'Average',
+    upcomingAppointments: 'Upcoming Appointments',
+    pendingAppointments: 'Pending Appointments',
+    bookAppointment: 'Book Appointment',
+    new: 'New',
+    clickToBookNow: 'Click to book now',
+    yourNextAppointment: 'Your Next Appointment',
+    date: 'Date',
+    time: 'Time',
+    service: 'Service',
+    history: 'History',
+    yourPreviousAppointments: 'Your Previous Appointments',
+    profile: 'Profile',
+    yourPersonalInfo: 'Your Personal Information',
+    welcomeTo: 'Welcome to',
+    delightedToServe: 'We\'re delighted to serve you',
+    loggingOut: 'Loading...',
+    logout: 'Logout'
+  }
+}
+
 export function PortalDashboard() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
@@ -19,8 +78,12 @@ export function PortalDashboard() {
     return (saved === 'en' ? 'en' : 'ar') as Language
   })
 
+  const t = translations[lang]
+  const dir = lang === 'ar' ? 'rtl' : 'ltr'
+
   const handleLanguageChange = (newLang: Language) => {
     setLang(newLang)
+    localStorage.setItem(`portal_lang_${slug}`, newLang)
   }
 
   // Auth & Settings - use lazy initialization with localStorage
@@ -35,9 +98,9 @@ export function PortalDashboard() {
   // Update browser title
   useEffect(() => {
     if (settings?.shop_name) {
-      document.title = `${settings.shop_name} - حسابي`
+      document.title = `${settings.shop_name} - ${t.myAccount}`
     }
-  }, [settings?.shop_name])
+  }, [settings?.shop_name, lang, t])
 
   // Redirect to login if not authenticated (only after initial load)
   useEffect(() => {
@@ -50,10 +113,10 @@ export function PortalDashboard() {
     setLoggingOut(true)
     try {
       await logoutPortalUser()
-      toast.success('تم تسجيل الخروج بنجاح')
+      toast.success(t.logoutSuccess)
       navigate(`/shop/${slug}`, { replace: true })
     } catch (err) {
-      toast.error('خطأ في تسجيل الخروج')
+      toast.error(t.logoutError)
       setLoggingOut(false)
     }
   }
@@ -63,7 +126,7 @@ export function PortalDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 rounded-full border-4 border-gold-400/20 border-t-gold-400 animate-spin mx-auto mb-4"></div>
-          <p className="text-white/60">جاري التحميل...</p>
+          <p className="text-white/60">{t.loading}</p>
         </div>
       </div>
     )
@@ -76,7 +139,7 @@ export function PortalDashboard() {
   const primaryColor = settings?.primary_color || '#FFD700'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-24" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-24" dir={dir}>
       <div className="max-w-5xl mx-auto p-8">
         {/* Header with language toggle and logout */}
         <div className="flex justify-between items-center mb-8">
@@ -95,13 +158,13 @@ export function PortalDashboard() {
             className="flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded hover:bg-red-500/30 transition disabled:opacity-50"
           >
             <LogOut size={18} />
-            {loggingOut ? 'جاري...' : 'خروج'}
+            {loggingOut ? t.loggingOut : t.logout}
           </button>
         </div>
 
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">مرحباً {customer.name || customer.phone}</h1>
+          <h1 className="text-4xl font-bold mb-2">{t.welcome} {customer.name || customer.phone}</h1>
           {settings && <p className="text-white/70 text-lg">{settings.shop_name}</p>}
         </div>
 
@@ -110,10 +173,10 @@ export function PortalDashboard() {
           <div className="bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-white/70 text-sm mb-2">إجمالي الزيارات</div>
+                <div className="text-white/70 text-sm mb-2">{t.totalVisits}</div>
                 <div className="text-3xl font-bold text-white">{stats.totalVisits}</div>
                 <p className="text-white/40 text-xs mt-2">
-                  {stats.lastVisit ? `آخر زيارة: ${new Date(stats.lastVisit).toLocaleDateString('ar-EG')}` : 'لا توجد زيارات بعد'}
+                  {stats.lastVisit ? `${lang === 'ar' ? 'آخر زيارة' : 'Last visit'}: ${new Date(stats.lastVisit).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}` : t.noVisitsYet}
                 </p>
               </div>
               <TrendingUp size={24} className="text-white/30" />
@@ -123,11 +186,11 @@ export function PortalDashboard() {
           <div className="bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-white/70 text-sm mb-2">إجمالي الإنفاق</div>
+                <div className="text-white/70 text-sm mb-2">{t.totalSpent}</div>
                 <div className="text-3xl font-bold" style={{ color: primaryColor }}>
                   {stats.totalSpent}ج
                 </div>
-                <p className="text-white/40 text-xs mt-2">متوسط: {stats.totalVisits > 0 ? (stats.totalSpent / stats.totalVisits).toFixed(0) : 0}ج</p>
+                <p className="text-white/40 text-xs mt-2">{t.average}: {stats.totalVisits > 0 ? (stats.totalSpent / stats.totalVisits).toFixed(0) : 0}ج</p>
               </div>
               <TrendingUp size={24} className="text-white/30" />
             </div>
@@ -136,9 +199,9 @@ export function PortalDashboard() {
           <div className="bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-white/70 text-sm mb-2">المواعيد القادمة</div>
+                <div className="text-white/70 text-sm mb-2">{t.upcomingAppointments}</div>
                 <div className="text-3xl font-bold text-white">{stats.upcomingBookingsCount}</div>
-                <p className="text-white/40 text-xs mt-2">مواعيد معلقة</p>
+                <p className="text-white/40 text-xs mt-2">{t.pendingAppointments}</p>
               </div>
               <Calendar size={24} className="text-white/30" />
             </div>
@@ -154,9 +217,9 @@ export function PortalDashboard() {
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-white/70 text-sm mb-2">احجز موعد</div>
-                <div className="text-2xl font-bold text-white">جديد</div>
-                <p className="text-white/40 text-xs mt-2">اضغط للحجز الآن</p>
+                <div className="text-white/70 text-sm mb-2">{t.bookAppointment}</div>
+                <div className="text-2xl font-bold text-white">{t.new}</div>
+                <p className="text-white/40 text-xs mt-2">{t.clickToBookNow}</p>
               </div>
               <Clock size={24} className="text-white/30" />
             </div>
@@ -168,23 +231,23 @@ export function PortalDashboard() {
           <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-6 mb-8">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Calendar size={20} />
-              موعدك القادم
+              {t.yourNextAppointment}
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <div className="text-green-400/70 text-sm mb-1">التاريخ</div>
+                <div className="text-green-400/70 text-sm mb-1">{t.date}</div>
                 <div className="text-xl font-bold text-white">
-                  {new Date(stats.nextBooking.bookingDate).toLocaleDateString('ar-EG')}
+                  {new Date(stats.nextBooking.bookingDate).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}
                 </div>
               </div>
               <div>
-                <div className="text-green-400/70 text-sm mb-1">الوقت</div>
+                <div className="text-green-400/70 text-sm mb-1">{t.time}</div>
                 <div className="text-xl font-bold text-white" dir="ltr">
                   {stats.nextBooking.bookingTime}
                 </div>
               </div>
               <div>
-                <div className="text-green-400/70 text-sm mb-1">الخدمة</div>
+                <div className="text-green-400/70 text-sm mb-1">{t.service}</div>
                 <div className="text-xl font-bold text-white">
                   {stats.nextBooking.serviceName}
                 </div>
@@ -200,8 +263,8 @@ export function PortalDashboard() {
             className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-lg p-6 hover:border-blue-500/60 transition transform hover:scale-105"
           >
             <div className="text-5xl mb-3">📅</div>
-            <h3 className="font-bold mb-2 text-lg text-white">احجز موعد</h3>
-            <p className="text-sm text-white/70">احجز الآن</p>
+            <h3 className="font-bold mb-2 text-lg text-white">{t.bookAppointment}</h3>
+            <p className="text-sm text-white/70">{t.clickToBookNow}</p>
           </button>
 
           <button
@@ -209,8 +272,8 @@ export function PortalDashboard() {
             className="bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30 rounded-lg p-6 hover:border-green-500/60 transition transform hover:scale-105"
           >
             <div className="text-5xl mb-3">📊</div>
-            <h3 className="font-bold mb-2 text-lg text-white">السجل</h3>
-            <p className="text-sm text-white/70">مواعيدك السابقة</p>
+            <h3 className="font-bold mb-2 text-lg text-white">{t.history}</h3>
+            <p className="text-sm text-white/70">{t.yourPreviousAppointments}</p>
           </button>
 
           <button
@@ -218,15 +281,15 @@ export function PortalDashboard() {
             className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-lg p-6 hover:border-purple-500/60 transition transform hover:scale-105"
           >
             <div className="text-5xl mb-3">👤</div>
-            <h3 className="font-bold mb-2 text-lg text-white">البيانات</h3>
-            <p className="text-sm text-white/70">معلوماتك الشخصية</p>
+            <h3 className="font-bold mb-2 text-lg text-white">{t.profile}</h3>
+            <p className="text-sm text-white/70">{t.yourPersonalInfo}</p>
           </button>
         </div>
 
         {/* Welcome Section */}
         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-lg p-8">
-          <h2 className="text-2xl font-bold mb-4 text-white">مرحباً بك في {settings?.shop_name}</h2>
-          <p className="text-white/70 mb-6">{settings?.welcome_message || 'نسعد بخدمتك'}</p>
+          <h2 className="text-2xl font-bold mb-4 text-white">{t.welcomeTo} {settings?.shop_name}</h2>
+          <p className="text-white/70 mb-6">{settings?.welcome_message || t.delightedToServe}</p>
         </div>
       </div>
 

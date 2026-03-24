@@ -1,6 +1,35 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePortalSettingsWithShop } from '@/hooks/usePortalSettingsWithShop'
+
+type Language = 'ar' | 'en'
+
+const translations = {
+  ar: {
+    loading: 'جاري التحميل...',
+    error: 'حدث خطأ',
+    unknownError: 'خطأ غير معروف',
+    tryAgain: 'إعادة المحاولة',
+    portalInactive: 'هذه البوابة غير نشطة حالياً',
+    contactAdmin: 'يرجى التواصل مع مدير المحل',
+    welcome: 'مرحباً',
+    defaultWelcome: 'أهلاً وسهلاً وأنت معنا',
+    login: 'تسجيل الدخول',
+    register: 'إنشاء حساب جديد'
+  },
+  en: {
+    loading: 'Loading...',
+    error: 'Error',
+    unknownError: 'Unknown error',
+    tryAgain: 'Try Again',
+    portalInactive: 'This portal is currently inactive',
+    contactAdmin: 'Please contact the shop manager',
+    welcome: 'Welcome',
+    defaultWelcome: 'Welcome to us',
+    login: 'Sign In',
+    register: 'Create Account'
+  }
+}
 
 const animationStyles = `
   @keyframes float-particle {
@@ -18,21 +47,36 @@ const animationStyles = `
 export function PortalLanding() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+
+  // Language state
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem(`portal_lang_${slug}`)
+    return (saved === 'en' ? 'en' : 'ar') as Language
+  })
+
+  const t = translations[lang]
+  const dir = lang === 'ar' ? 'rtl' : 'ltr'
+
   const { settings, loading, error } = usePortalSettingsWithShop(slug)
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang)
+    localStorage.setItem(`portal_lang_${slug}`, newLang)
+  }
 
   // Update browser title
   useEffect(() => {
     if (settings?.shop_name) {
-      document.title = `${settings.shop_name} - ???? ????`
+      document.title = `${settings.shop_name} - ${t.welcome}`
     }
-  }, [settings?.shop_name])
+  }, [settings?.shop_name, lang, t])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 rounded-full border-4 border-gold-400/20 border-t-gold-400 animate-spin mx-auto mb-4"></div>
-          <p className="text-white/60">???? ???????...</p>
+          <p className="text-white/60">{t.loading}</p>
         </div>
       </div>
     )
@@ -40,14 +84,14 @@ export function PortalLanding() {
 
   if (error || !settings) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center" dir={dir}>
         <div className="text-center">
-          <p className="text-red-400 mb-4">{error || '????????? ??? ?????'}</p>
+          <p className="text-red-400 mb-4">{error || t.unknownError}</p>
           <button
             onClick={() => navigate("/")}
             className="px-6 py-2 bg-gold-400 text-black rounded hover:bg-gold-500 transition"
           >
-            ?????? ???????
+            {t.tryAgain}
           </button>
         </div>
       </div>
@@ -57,12 +101,12 @@ export function PortalLanding() {
   // Check if portal is inactive
   if (settings.is_active === false) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center" dir={dir}>
         <div className="text-center">
           <p className="text-3xl text-red-400 font-bold">
-            ??? ????? ??? ???? ??????
+            {t.portalInactive}
           </p>
-          <p className="text-gray-400 mt-4">???? ?????? ??????</p>
+          <p className="text-gray-400 mt-4">{t.contactAdmin}</p>
         </div>
       </div>
     )
@@ -75,7 +119,7 @@ export function PortalLanding() {
         backgroundColor: "#0A0F1E",
         background: `radial-gradient(ellipse at center, #0A0F1E 0%, #000 100%)`,
       }}
-      dir="rtl"
+      dir={dir}
     >
       <style>{animationStyles}</style>
 
@@ -120,7 +164,7 @@ export function PortalLanding() {
                 marginBottom: "16px"
               }}
             >
-              ?
+              ✂️
             </div>
           </div>
 
@@ -146,7 +190,7 @@ export function PortalLanding() {
               lineHeight: "1.5"
             }}
           >
-            {settings.welcome_message || "???? ????? ????"}
+            {settings.welcome_message || t.defaultWelcome}
           </p>
 
           {/* Divider */}
@@ -177,7 +221,7 @@ export function PortalLanding() {
                 transition: "all 0.3s ease"
               }}
             >
-              ???? ??????
+              {t.login}
             </button>
 
             {/* Register Button */}
@@ -203,7 +247,17 @@ export function PortalLanding() {
                 e.currentTarget.style.backgroundColor = "transparent"
               }}
             >
-              ????? ???? ????
+              {t.register}
+            </button>
+          </div>
+
+          {/* Language Toggle */}
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => handleLanguageChange(lang === 'ar' ? 'en' : 'ar')}
+              className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs font-bold transition"
+            >
+              {lang === 'ar' ? 'EN' : 'ع'}
             </button>
           </div>
         </div>

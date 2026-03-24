@@ -6,9 +6,91 @@ import { supabase } from '@/db/supabase'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff } from 'lucide-react'
 
+type Language = 'ar' | 'en'
+
+const translations = {
+  ar: {
+    email: 'البريد الإلكتروني',
+    password: 'كلمة المرور',
+    showPassword: 'إظهار',
+    hidePassword: 'إخفاء',
+    login: 'دخول',
+    loggingIn: 'جاري الدخول...',
+    forgotPassword: 'هل نسيت كلمة المرور؟',
+    dontHaveAccount: 'ليس لديك حساب؟',
+    register: 'سجل الآن',
+    loading: 'جاري التحميل...',
+    portalUnavailable: 'البوابة غير متاحة',
+    portalNotFound: 'لم يتم العثور على بيانات البوابة',
+    portalBroken: 'البوابة معطلة حالياً',
+    checkLink: 'تأكد من صحة الرابط',
+    needActivation: 'قد تحتاج البوابة إلى تفعيل',
+    contactAdmin: 'اتصل بمدير المحل',
+    contactAdminHelp: 'اتصل بمدير المحل للمزيد من المساعدة',
+    retry: 'إعادة المحاولة',
+    shopNotError: 'خطأ: محل غير محدد',
+    portalNotAvailable: 'البوربتال غير متاح الآن',
+    loginSuccess: 'تم تسجيل الدخول بنجاح',
+    loginError: 'خطأ في تسجيل الدخول',
+    forgotPasswordConfirm: 'أدخل بريدك الإلكتروني ورقم هاتفك',
+    emailRequired: 'يرجى إدخال البريد الإلكتروني ورقم الهاتف',
+    dataNotMatch: 'البيانات غير متطابقة، تحقق من بريدك الإلكتروني ورقم هاتفك',
+    resetSent: 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني ✓',
+    resetError: 'خطأ في إرسال رابط إعادة التعيين',
+    back: 'العودة',
+    phone: 'رقم الهاتف',
+    sendReset: 'إرسال رابط إعادة التعيين',
+    sendingReset: 'جاري الإرسال...',
+    signingIn: 'جاري الدخول...'
+  },
+  en: {
+    email: 'Email',
+    password: 'Password',
+    showPassword: 'Show',
+    hidePassword: 'Hide',
+    login: 'Login',
+    loggingIn: 'Logging in...',
+    forgotPassword: 'Forgot Password?',
+    dontHaveAccount: 'Don\'t have an account?',
+    register: 'Sign up now',
+    loading: 'Loading...',
+    portalUnavailable: 'Portal Unavailable',
+    portalNotFound: 'Portal data not found',
+    portalBroken: 'Portal is currently broken',
+    checkLink: 'Check the link is correct',
+    needActivation: 'Portal may need activation',
+    contactAdmin: 'Contact the shop manager',
+    contactAdminHelp: 'Contact the shop manager for more help',
+    retry: 'Retry',
+    shopNotError: 'Error: Shop not specified',
+    portalNotAvailable: 'Portal not available now',
+    loginSuccess: 'Logged in successfully',
+    loginError: 'Login error',
+    forgotPasswordConfirm: 'Enter your email and phone number',
+    emailRequired: 'Please enter email and phone number',
+    dataNotMatch: 'Data does not match, check your email and phone number',
+    resetSent: 'Password reset link sent to your email ✓',
+    resetError: 'Error sending reset link',
+    back: 'Back',
+    phone: 'Phone',
+    sendReset: 'Send Reset Link',
+    sendingReset: 'Sending...',
+    signingIn: 'Signing in...'
+  }
+}
+
 export function PortalLogin() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+
+  // Language state
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem(`portal_lang_${slug}`)
+    return (saved === 'en' ? 'en' : 'ar') as Language
+  })
+
+  const t = translations[lang]
+  const dir = lang === 'ar' ? 'rtl' : 'ltr'
   
   // Debug logging
   useEffect(() => {
@@ -38,9 +120,14 @@ export function PortalLogin() {
   // Update browser title
   useEffect(() => {
     if (settings?.shop_name) {
-      document.title = `${settings.shop_name} - تسجيل الدخول`
+      document.title = `${settings.shop_name} - ${t.login}`
     }
-  }, [settings?.shop_name])
+  }, [settings?.shop_name, lang, t])
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang)
+    localStorage.setItem(`portal_lang_${slug}`, newLang)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,12 +135,12 @@ export function PortalLogin() {
 
     try {
       if (!slug) {
-        toast.error('خطأ: محل غير محدد')
+        toast.error(t.shopNotError)
         return
       }
 
       if (!settings) {
-        toast.error('البوربتال غير متاح الآن')
+        toast.error(t.portalNotAvailable)
         return
       }
 
@@ -66,10 +153,10 @@ export function PortalLogin() {
 
       // If successful, navigate to dashboard
       navigate(`/shop/${slug}/dashboard`, { replace: true })
-      toast.success('تم تسجيل الدخول بنجاح')
+      toast.success(t.loginSuccess)
     } catch (err: any) {
       console.error('Login error:', err)
-      toast.error(err.message || 'خطأ في تسجيل الدخول')
+      toast.error(err.message || t.loginError)
     } finally {
       setLoading(false)
     }
@@ -77,12 +164,12 @@ export function PortalLogin() {
 
   const handleForgotPassword = async () => {
     if (!forgotEmail || !forgotPhone) {
-      toast.error('يرجى إدخال البريد الإلكتروني ورقم الهاتف')
+      toast.error(t.emailRequired)
       return
     }
 
     if (!settings) {
-      toast.error('البوربتال غير متاح الآن')
+      toast.error(t.portalNotAvailable)
       return
     }
 
@@ -100,7 +187,7 @@ export function PortalLogin() {
       if (checkErr && checkErr.code !== 'PGRST116') throw checkErr
 
       if (!data) {
-        toast.error('البيانات غير متطابقة، تحقق من بريدك الإلكتروني ورقم هاتفك')
+        toast.error(t.dataNotMatch)
         return
       }
 
@@ -110,13 +197,13 @@ export function PortalLogin() {
       })
 
       if (resetErr) throw resetErr
-      toast.success('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني ✓')
+      toast.success(t.resetSent)
       setShowForgotPassword(false)
       setForgotEmail('')
       setForgotPhone('')
     } catch (err: any) {
       console.error('Forgot password error:', err)
-      toast.error(err.message || 'خطأ في إرسال رابط إعادة التعيين')
+      toast.error(err.message || t.resetError)
     } finally {
       setLoading(false)
     }
@@ -127,7 +214,7 @@ export function PortalLogin() {
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 rounded-full border-4 border-gold-400/20 border-t-gold-400 animate-spin mx-auto mb-4"></div>
-          <p className="text-white/60">جاري التحميل...</p>
+          <p className="text-white/60">{t.loading}</p>
         </div>
       </div>
     )
@@ -135,33 +222,33 @@ export function PortalLogin() {
 
   if (!settings) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-4" dir={dir}>
         <div className="w-full max-w-md text-center space-y-6">
           <div className="space-y-2">
             <div className="text-5xl">⚠️</div>
-            <h1 className="text-2xl font-bold text-white">البوابة غير متاحة</h1>
+            <h1 className="text-2xl font-bold text-white">{t.portalUnavailable}</h1>
           </div>
           
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 space-y-3">
             <p className="text-red-300 text-sm">
-              {!settings ? 'لم يتم العثور على بيانات البوابة' : 'البوابة معطلة حالياً'}
+              {!settings ? t.portalNotFound : t.portalBroken}
             </p>
-            <ul className="text-red-300/80 text-xs space-y-2 text-right">
-              <li>• تأكد من صحة الرابط</li>
-              <li>• قد تحتاج البوابة إلى تفعيل</li>
-              <li>• اتصل بمدير المحل</li>
+            <ul className="text-red-300/80 text-xs space-y-2" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
+              <li>• {t.checkLink}</li>
+              <li>• {t.needActivation}</li>
+              <li>• {t.contactAdmin}</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <p className="text-slate-400 text-sm">
-              👇 اتصل بمدير المحل للمزيد من المساعدة
+              👇 {t.contactAdminHelp}
             </p>
             <button
               onClick={() => window.location.reload()}
               className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition duration-200"
             >
-              إعادة المحاولة
+              {t.retry}
             </button>
           </div>
         </div>
@@ -175,7 +262,7 @@ export function PortalLogin() {
       style={{
         background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
       }}
-      dir="rtl"
+      dir={dir}
     >
       {/* Decorative gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -192,7 +279,15 @@ export function PortalLogin() {
           <h2 className="text-3xl font-bold text-white drop-shadow-lg">
             {settings.shop_name}
           </h2>
-          <p className="text-cyan-300 font-medium text-sm">تسجيل الدخول إلى حسابك</p>
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <p className="text-cyan-300 font-medium text-sm">{lang === 'ar' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account'}</p>
+            <button
+              onClick={() => handleLanguageChange(lang === 'ar' ? 'en' : 'ar')}
+              className="ml-2 px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs font-bold transition"
+            >
+              {lang === 'ar' ? 'EN' : 'ع'}
+            </button>
+          </div>
         </div>
 
         {/* Main Card */}
@@ -202,7 +297,7 @@ export function PortalLogin() {
               {/* Email Input */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-slate-200">
-                  البريد الإلكتروني
+                  {t.email}
                 </label>
                 <input
                   type="email"
@@ -218,7 +313,7 @@ export function PortalLogin() {
               {/* Password Input */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-slate-200">
-                  كلمة المرور
+                  {t.password}
                 </label>
                 <div className="relative">
                   <input
@@ -253,7 +348,7 @@ export function PortalLogin() {
                   disabled={loading}
                   className="text-xs font-medium text-cyan-400 hover:text-cyan-300 transition duration-200 disabled:opacity-50"
                 >
-                  هل نسيت كلمة المرور؟
+                  {t.forgotPassword}
                 </button>
               </div>
 
@@ -266,10 +361,10 @@ export function PortalLogin() {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    جاري الدخول...
+                    {t.signingIn}
                   </span>
                 ) : (
-                  'دخول'
+                  t.login
                 )}
               </button>
             </form>
@@ -282,13 +377,13 @@ export function PortalLogin() {
               className="space-y-4"
             >
               <div className="text-center mb-4">
-                <p className="text-slate-300 text-sm">أدخل بريدك الإلكتروني ورقم هاتفك</p>
+                <p className="text-slate-300 text-sm">{t.forgotPasswordConfirm}</p>
               </div>
 
               {/* Email Input */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-slate-200">
-                  البريد الإلكتروني
+                  {t.email}
                 </label>
                 <input
                   type="email"
@@ -304,7 +399,7 @@ export function PortalLogin() {
               {/* Phone Input */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-slate-200">
-                  رقم الهاتف
+                  {t.phone}
                 </label>
                 <input
                   type="tel"
@@ -327,10 +422,10 @@ export function PortalLogin() {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    جاري الإرسال...
+                    {t.sendingReset}
                   </span>
                 ) : (
-                  'إرسال رابط إعادة التعيين'
+                  t.sendReset
                 )}
               </button>
 
@@ -341,7 +436,7 @@ export function PortalLogin() {
                 disabled={loading}
                 className="w-full py-3 rounded-lg font-semibold text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/60 hover:bg-cyan-500/10 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                العودة
+                {t.back}
               </button>
             </form>
           )}
@@ -352,13 +447,13 @@ export function PortalLogin() {
           {/* Register Link */}
           <div className="text-center">
             <p className="text-slate-400 text-sm">
-              ليس لديك حساب؟{' '}
+              {t.dontHaveAccount}{' '}
               <button
                 onClick={() => navigate(`/shop/${slug}/register`)}
                 disabled={loading}
                 className="font-semibold text-cyan-400 hover:text-cyan-300 transition duration-200 disabled:opacity-50"
               >
-                سجل الآن
+                {t.register}
               </button>
             </p>
           </div>
