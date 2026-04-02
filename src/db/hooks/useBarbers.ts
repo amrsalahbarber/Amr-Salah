@@ -77,13 +77,10 @@ export const useBarbers = () => {
 
   const deleteBarber = async (id: string) => {
     try {
-      if (!shopId) throw new Error('Shop ID is required')
-
       const { error } = await supabase
         .from('barbers')
         .delete()
         .eq('id', id)
-        .eq('shop_id', shopId)
 
       if (error) throw error
 

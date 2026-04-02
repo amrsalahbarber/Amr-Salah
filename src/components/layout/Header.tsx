@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { language, toggleLanguage } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const { t } = useTranslation()
-  const { user, role, signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -108,9 +108,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                 >
                   <div className="px-4 py-3 border-b border-white/10">
                     <p className="text-white text-sm font-medium">{user?.email}</p>
-                    <p className="text-gold-400 text-xs mt-1">
-                      {role === 'admin' ? 'Administrator' : 'Shop Owner'}
-                    </p>
+                    <p className="text-gold-400 text-xs mt-1">Shop Manager</p>
                   </div>
 
                   <motion.button

@@ -14,7 +14,7 @@ interface PortalSettings {
 }
 
 export const usePortalSettings = () => {
-  const { shopId } = useAuth()
+  const { user } = useAuth()
   const [portalSettings, setPortalSettings] = useState<PortalSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,19 +22,18 @@ export const usePortalSettings = () => {
   const fetchPortalSettings = useCallback(async () => {
     try {
       setLoading(true)
-      if (!shopId) {
-        console.log('⏭️ No shopId available, skipping portal settings fetch')
+      if (!user) {
+        console.log('⏭️ No user available, skipping portal settings fetch')
         setPortalSettings(null)
         return
       }
 
-      console.log('🔍 Fetching portal settings for shop:', shopId)
+      console.log('🔍 Fetching portal settings')
 
       // Use limit(1) instead of single() to avoid 406 errors
       const { data, error } = await supabase
         .from('portal_settings')
         .select('*')
-        .eq('shop_id', shopId)
         .limit(1)
 
       if (error) {
@@ -59,20 +58,17 @@ export const usePortalSettings = () => {
     } finally {
       setLoading(false)
     }
-  }, [shopId])
+  }, [user])
 
   const createDefaultPortalSettings = async () => {
-    if (!shopId) return
-
     try {
-      // Generate slug from shop ID - will be updated when slug is provided
+      // Generate slug - will be updated when slug is provided
       const randomNum = Math.floor(1000 + Math.random() * 9000)
       const slug = `shop-${randomNum}`
 
       const { data, error } = await supabase
         .from('portal_settings')
         .insert({
-          shop_id: shopId,
           is_active: false,
           portal_slug: slug,
           template_id: 1,
@@ -100,8 +96,8 @@ export const usePortalSettings = () => {
 
   const updatePortalSettings = async (updates: Partial<PortalSettings>) => {
     try {
-      if (!shopId) {
-        throw new Error('معرّف المحل غير متوفر')
+      if (!user) {
+        throw new Error('معرّف المستخدم غير متوفر')
       }
 
       console.log('💾 Updating portal settings:', updates)
@@ -118,7 +114,7 @@ export const usePortalSettings = () => {
         const { data: freshData } = await supabase
           .from('portal_settings')
           .select('*')
-          .eq('shop_id', shopId)
+          .limit(1)
           .single()
         
         if (!freshData) {

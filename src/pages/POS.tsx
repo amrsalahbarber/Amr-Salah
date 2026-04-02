@@ -10,11 +10,9 @@ import { useVisitLogs } from '../db/hooks/useVisitLogs'
 import { useServiceVariants } from '../db/hooks/useServiceVariants'
 import { useBarbers } from '../db/hooks/useBarbers'
 import { useBookings } from '../db/hooks/useBookings'
-import { checkSubscriptionStatus } from '../utils/subscriptionChecker'
 import { appEmitter } from '../utils/eventEmitter'
 import { getEgyptDateString, getEgyptTimeString } from '../utils/egyptTime'
 import toast from 'react-hot-toast'
-import { useAuth } from '../hooks/useAuth'
 
 // ✅ Normalize search input - fix Arabic keyboard/IME issues
 const normalizeSearchInput = (value: string): string => {
@@ -70,7 +68,6 @@ export const POS: React.FC = () => {
   const { getVariantsByServiceId } = useServiceVariants()
   const { barbers } = useBarbers()
   const { getTodayBookings, updateBooking } = useBookings()
-  const { shopId } = useAuth()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedClient, setSelectedClient] = useState<any>(null)
@@ -180,24 +177,6 @@ export const POS: React.FC = () => {
 
     if (cart.length === 0) {
       toast.error('السلة فارغة')
-      return
-    }
-
-    // Check subscription status before allowing transaction
-    try {
-      const subStatus = await checkSubscriptionStatus(shopId || '')
-      if (!subStatus.isActive) {
-        const messages: Record<string, string> = {
-          'inactive': 'اشتراكك غير نشط. يرجى تفعيل الاشتراك',
-          'suspended': 'تم إيقاف اشتراكك. يرجى التواصل مع الدعم',
-          'expired': 'انتهى صلاحية اشتراكك. يرجى تجديد الاشتراك',
-        }
-        toast.error(messages[subStatus.status] || 'اشتراكك غير صالح')
-        return
-      }
-    } catch (err) {
-      console.error('Error checking subscription:', err)
-      toast.error('فشل التحقق من صلاحية الاشتراك')
       return
     }
 

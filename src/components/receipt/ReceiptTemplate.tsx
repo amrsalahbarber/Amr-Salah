@@ -74,21 +74,18 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>(
     },
     ref
   ) => {
-    const { shopId } = useAuth()
+    const { user } = useAuth()
     const [shopName, setShopName] = useState<string>('محل الحلاقة')
     const [shopPhone, setShopPhone] = useState<string>('')
     const [formattedTime, setFormattedTime] = useState<string>('')
 
     // Fetch shop settings directly from database
     useEffect(() => {
-      if (!shopId) return
-
       const fetchShopSettings = async () => {
         try {
           const { data, error } = await supabase
             .from('settings')
             .select('key, value')
-            .eq('shop_id', shopId)
 
           if (error) throw error
 
@@ -109,7 +106,7 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>(
       }
 
       fetchShopSettings()
-    }, [shopId])
+    }, [user])
 
     // Format time with proper timezone display
     useEffect(() => {

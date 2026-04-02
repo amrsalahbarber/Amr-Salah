@@ -27,7 +27,7 @@ type LoginFormInputs = z.infer<typeof loginSchema>
  */
 export default function Login() {
   const navigate = useNavigate()
-  const { signIn, loading: authLoading, error: authError, role } = useAuth()
+  const { signIn, loading: authLoading, error: authError, user } = useAuth()
   const { t, i18n } = useTranslation()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -42,9 +42,8 @@ export default function Login() {
   const isRTL = i18n.language === 'ar'
 
   // Redirect if already logged in
-  if (!authLoading && role) {
-    const redirectPath = role === 'admin' ? '/admin' : `/dashboard`
-    navigate(redirectPath, { replace: true })
+  if (!authLoading && user) {
+    navigate('/dashboard', { replace: true })
     return null
   }
 

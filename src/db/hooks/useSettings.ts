@@ -88,8 +88,6 @@ export const useSettings = () => {
   }
 
   const initializeSettings = async () => {
-    if (!shopId) return
-
     const defaultSettings = {
       barbershipName: 'My Barbershop',
       barbershipAddress: '',
@@ -105,7 +103,6 @@ export const useSettings = () => {
         const existing = await supabase
           .from('settings')
           .select('key')
-          .eq('shop_id', shopId)
           .eq('key', key)
           .maybeSingle()
 

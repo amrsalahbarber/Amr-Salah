@@ -306,7 +306,6 @@ export const useBookings = () => {
       })
 
       const newBooking = {
-        shop_id: shopId,
         clientid: booking.clientId,
         clientname: booking.clientName,
         clientphone: booking.clientPhone,

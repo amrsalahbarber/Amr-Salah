@@ -189,7 +189,3 @@ export const useTransactions = () => {
     getRevenueForDateRange,
   }
 }
-    getTodayRevenue,
-    getRevenueForDateRange,
-  }
-}
